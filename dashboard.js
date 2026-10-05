@@ -1912,9 +1912,11 @@
       idx.priceNum = actual?.price ?? 0;
       idx.changeNum = actual?.change ?? 0;
       idx.change = actual ? `${actual.change >= 0 ? '+' : ''}${actual.change.toFixed(2)}%` : '未有資料';
-      idx.quoteSymbol = actual?.symbol || '';
+      idx.quoteSymbol = actual?.chart_symbol || actual?.symbol || '';
+      idx.chartNote = actual?.chart_note || '';
+      if(actual && !actual.symbol.endsWith('=F')) idx.name = `${key} ${actual.symbol === '^SOX' ? '費城半導體指數' : actual.symbol}`;
       idx.status = '同次掃描快照'; idx.range = '見真實圖表'; idx.ema50 = '見真實圖表'; idx.structure = '見同次價格分析';
-      if(actual) idx.badge = actual.symbol;
+      idx.badge = key;
     }
 
     let currentIndexCode = "ES";
@@ -2119,6 +2121,13 @@
     // 產生高擬真歷史 K 線序列 (用於即時無延遲渲染)
     async function loadIndexChartData(idx) {
       currentIndexChartData = null;
+      let note = document.getElementById('idx-chart-source-note');
+      if (!note) {
+        note = document.createElement('p'); note.id = 'idx-chart-source-note';
+        note.className = 'text-xs text-slate-400 px-4 py-2';
+        document.getElementById('idx-chart-container')?.before(note);
+      }
+      note.textContent = idx.chartNote || ''; note.hidden = !idx.chartNote;
       try {
         const res = await fetch(`/api/stock-chart?symbol=${encodeURIComponent(idx.quoteSymbol)}`);
         if (!res.ok) throw Error('這次掃描未有此指數真實圖表');

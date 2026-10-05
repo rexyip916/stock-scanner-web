@@ -49,7 +49,7 @@
     const value=d.indices?.[card.dataset.scanIndex];const nums=card.querySelectorAll('.mono-num');
     if(nums[0])nums[0].textContent=value?`${value.change>=0?'+':''}${value.change.toFixed(2)}%`:'—';
     if(nums[1])nums[1].textContent=value?value.price.toLocaleString():'—';
-    const badge=card.querySelector('.tracking-wider');if(badge&&value)badge.textContent=value.symbol;
+    const badge=card.querySelector('.tracking-wider');if(badge&&value)badge.textContent=card.dataset.scanIndex;
    }
    const sentiment=d.sentiment||{};
    for(const id of ['chart-factor-smi','chart-factor-cboe','chart-factor-vix','chart-factor-lev']){const e=document.getElementById(id);if(e)e.textContent='未有同次因子數據';}
