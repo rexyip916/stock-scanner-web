@@ -223,7 +223,9 @@
         const card = document.createElement('button');
         card.onclick = () => filterIndexResonance(item.code);
 
-        const rankBadge = idx === 0 ? "🥇 #1" : idx === 1 ? "🥈 #2" : idx === 2 ? "🥉 #3" : `#${idx + 1}`;
+        const rankBadge = idx === 0 ? "🥇 最強 #1" : idx === 1 ? "🥈 最強 #2"
+          : idx === sortedResonance.length - 1 ? "🥶 最弱 #1"
+          : idx === sortedResonance.length - 2 ? "❄️ 最弱 #2" : `#${idx + 1}`;
         const subTag = item.change >= 2.0 
           ? '🔥 資金瘋搶' 
           : (item.change >= 0 ? '⚡ 穩健跟隨' : '❄️ 資金流出');
@@ -240,7 +242,7 @@
 
         card.innerHTML = `
           <div class="flex items-center justify-between">
-            <span class="px-2 py-0.5 rounded text-[10px] font-black ${idx < 3 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : (isWarn ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' : 'bg-slate-800 text-slate-300 border border-slate-700')}">
+            <span class="px-2 py-0.5 rounded text-[10px] font-black ${item.change >= 0 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'}">
               ${rankBadge}
             </span>
             <span class="text-xs font-bold ${item.change >= 0 ? 'text-emerald-400' : 'text-rose-400'} font-mono">
@@ -365,9 +367,13 @@
 
       card.className = "bg-slate-950/90 rounded-3xl border transition duration-300 hover:-translate-y-1.5 cursor-pointer p-4 sm:p-5 flex flex-col justify-between space-y-3 relative overflow-hidden shadow-xl " + themeBorder;
 
+      const reboundDays = hero.bottom_rebound_days;
+      const reboundText = Number.isInteger(reboundDays) && reboundDays > 0
+        ? `箱底反彈第 ${reboundDays} 個交易日`
+        : reboundDays === 0 ? '未確認箱底反彈' : '未有反彈日數資料';
       const posBadge = hero.category === 'early' 
         ? `<span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[10px] font-bold font-mono shrink-0">🚀 突破第 ${hero.age} 天</span>` 
-        : `<span class="px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/30 text-[10px] font-bold font-mono shrink-0">🛡️ 盤整築底｜箱體 ${hero.box_duration ? String(hero.box_duration).replace(/天$/, '') + ' 個交易日' : '長度未有資料'}</span>`;
+        : `<span class="px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/30 text-[10px] font-bold font-mono shrink-0">🛡️ 箱體 ${hero.box_duration ? String(hero.box_duration).replace(/天$/, '') + ' 個交易日' : '長度未有資料'}｜${reboundText}</span>`;
 
       const ir = hero.index_resonance;
       let indexStatusBadge = '';
@@ -3473,6 +3479,7 @@
                 padding: 10,
                 displayColors: false,
                 callbacks: {
+                  labelTextColor: (ctx) => ctx.datasetIndex === 0 ? '#38bdf8' : '#fb7185',
                   title: (items) => '📅 ' + filtered[items[0].dataIndex].date,
                   label: (ctx) => {
                     if (ctx.datasetIndex === 0) return ' 🧠 Smart Money: ' + ctx.parsed.y + '%';
