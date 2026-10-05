@@ -367,7 +367,7 @@
         const isDrop = (ir.status === 'warning') || (typeof ir.index_change === 'number' && ir.index_change < 0);
         if (!isDrop) {
           const changeStr = typeof ir.index_change === 'number' ? `+${ir.index_change.toFixed(2)}%` : '';
-          const codeStr = ir.index_code ? `${ir.index_code} ` : '';
+          const codeStr = ir.index_name ? `${ir.index_name} ` : (ir.index_code ? `${ir.index_code} ` : '');
           indexStatusBadge = `
             <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold font-mono shadow-[0_0_10px_rgba(16,185,129,0.35)] animate-pulse shrink-0" title="指數狀態：與 ${codeStr}同步共振">
               <span class="relative flex h-2 w-2 shrink-0">
@@ -379,7 +379,7 @@
           `;
         } else {
           const changeStr = typeof ir.index_change === 'number' ? `${ir.index_change.toFixed(2)}%` : '';
-          const codeStr = ir.index_code ? `${ir.index_code} ` : '指數 ';
+          const codeStr = ir.index_name ? `${ir.index_name} ` : (ir.index_code ? `${ir.index_code} ` : '指數 ');
           indexStatusBadge = `
             <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/50 text-[10px] font-bold font-mono shadow-[0_0_10px_rgba(244,63,94,0.35)] animate-pulse shrink-0" title="指數逆風分歧警示">
               <span class="relative flex h-2 w-2 shrink-0">
