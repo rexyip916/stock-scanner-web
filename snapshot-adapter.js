@@ -48,11 +48,26 @@
   function fillMarket(){
    for(const card of document.querySelectorAll('[data-scan-index]')){
     const value=d.indices?.[card.dataset.scanIndex];const nums=card.querySelectorAll('.mono-num');
-    if(nums[0])nums[0].textContent=value?`${value.change>=0?'+':''}${value.change.toFixed(2)}%`:'—';
+    if(nums[0]){nums[0].textContent=value?`${value.change>=0?'+':''}${value.change.toFixed(2)}%`:'—';nums[0].classList.remove('text-emerald-400','text-rose-400');nums[0].classList.add(value?(value.change<0?'text-rose-400':'text-emerald-400'):'text-slate-400');}
     if(nums[1])nums[1].textContent=value?value.price.toLocaleString():'—';
     const badge=card.querySelector('.tracking-wider');if(badge&&value)badge.textContent=window.__INDEX_NAMES__[card.dataset.scanIndex];
    }
    const sentiment=d.sentiment||{};
+   const comparison=(element,current,previous,label,unit)=>{
+    if(!element)return;
+    const valid=Number.isFinite(current)&&Number.isFinite(previous);
+    const delta=valid?current-previous:0;
+    element.textContent=valid?`${label} ${delta>0?'+':''}${delta.toFixed(unit==='分'?0:2)}${unit}`:`未有${label==='較上週'?'上週':'上個交易日'}資料`;
+    element.style.color=valid?(delta<0?'#fb7185':delta>0?'#34d399':'#94a3b8'):'#94a3b8';
+   };
+   for(const el of document.querySelectorAll('[data-money-comparison]')){
+    const key=el.dataset.moneyComparison;const rows=d.money_history||[];
+    comparison(el,d.money?.[key+'_conf'],rows.length>1?rows.at(-2)[key]:null,'較上個交易日','分');
+   }
+   for(const el of document.querySelectorAll('[data-gauge-comparison]')){
+    const key=el.dataset.gaugeComparison;comparison(el,sentiment[key],sentiment[key+'_previous_week'],'較上週',key==='vix'?'點':'分');
+   }
+
    for(const id of ['chart-factor-smi','chart-factor-cboe','chart-factor-vix','chart-factor-lev']){const e=document.getElementById(id);if(e)e.textContent='未有同次因子數據';}
    for(const card of document.querySelectorAll('[data-scan-gauge]')){
     const key=card.dataset.scanGauge;const value=sentiment[key];const num=card.querySelector('[data-gauge-value]');if(num)num.textContent=Number.isFinite(value)?value.toFixed(key==='vix'?2:0):'—';

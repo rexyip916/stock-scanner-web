@@ -63,7 +63,7 @@
         desc: "COIN 加密貨幣龍頭"
       },
       {
-        code: "WARN",
+        code: "DIA",
         icon: "⚠️",
         name: "道指",
         change: -0.42,
@@ -80,10 +80,10 @@
       const key = {QQQ:'NQ', SOXX:'SOX', SOX:'SOX', SPY:'ES', DIA:'YM', IWM:'RTY'}[option.code];
       const actual = window.__SCAN_SNAPSHOT__.dashboard?.indices?.[key];
       option.available = !!actual;
-      if(actual) { option.code = actual.symbol; option.name = window.__INDEX_NAMES__[key]; option.desc = window.__INDEX_NAMES__[key] + '（同次掃描）'; }
-      if(option.code === 'WARN') { const changes=Object.values(window.__SCAN_SNAPSHOT__.dashboard?.indices || {}).map(i=>i.change); option.available=changes.length>0; option.change=changes.length?Math.min(...changes):0; option.name='跌市提示'; option.desc='同次指數風險篩選'; continue; }
+      if(actual) { option.code = actual.symbol; option.name = window.__INDEX_NAMES__[key]; option.desc = window.__INDEX_NAMES__[key] + '（較上個交易日）'; }
+
       option.change = actual?.change ?? 0;
-      option.status = actual ? '同次掃描' : '未有指數資料';
+      option.status = actual ? (actual.change < 0 ? 'warning' : 'bullish') : '未有指數資料';
     }
     function switchFilterDimension(dim) {
       currentFilterDimension = dim;
@@ -1915,7 +1915,7 @@
       idx.quoteSymbol = actual?.chart_symbol || actual?.symbol || '';
       idx.chartNote = actual?.chart_note || '';
       idx.name = window.__INDEX_NAMES__[key];
-      idx.status = '同次掃描快照'; idx.range = '見真實圖表'; idx.ema50 = '見真實圖表'; idx.structure = '見同次價格分析';
+      idx.status = '較上個交易日'; idx.range = '見真實圖表'; idx.ema50 = '見真實圖表'; idx.structure = '見同次價格分析';
       idx.badge = window.__INDEX_NAMES__[key];
     }
 

@@ -35,7 +35,6 @@
 <h1 class="text-base sm:text-lg font-black text-white tracking-wide">
             每日分析報告
           </h1>
-
 </div>
 </div>
 <!-- 快捷操作：TG對照 -->
@@ -73,7 +72,7 @@
 <div class="text-lg font-black text-white mono-num mt-2">—</div>
 <div class="text-[10px] text-slate-400 mt-1 flex items-center justify-between">
 <span>標普期指</span>
-<span class="text-emerald-400 font-medium">同次掃描快照</span>
+<span class="text-emerald-400 font-medium">較上個交易日</span>
 </div>
 </div>
 <!-- 2. NQ 期 (Nasdaq 100) -->
@@ -87,7 +86,7 @@
 <div class="text-lg font-black text-white mono-num mt-2">—</div>
 <div class="text-[10px] text-slate-400 mt-1 flex items-center justify-between">
 <span>納指期貨</span>
-<span class="text-sky-400 font-medium">同次掃描快照</span>
+<span class="text-sky-400 font-medium">較上個交易日</span>
 </div>
 </div>
 <!-- 3. SOX 期 (費城半導體) -->
@@ -101,7 +100,7 @@
 <div class="text-lg font-black text-white mono-num mt-2">—</div>
 <div class="text-[10px] text-slate-400 mt-1 flex items-center justify-between">
 <span>半導體指數</span>
-<span class="text-amber-300 font-medium">同次掃描快照</span>
+<span class="text-amber-300 font-medium">較上個交易日</span>
 </div>
 </div>
 <!-- 4. YM 期 (道瓊斯) -->
@@ -115,7 +114,7 @@
 <div class="text-lg font-black text-white mono-num mt-2">—</div>
 <div class="text-[10px] text-slate-400 mt-1 flex items-center justify-between">
 <span>道瓊期指</span>
-<span class="text-slate-400 font-medium">同次掃描快照</span>
+<span class="text-slate-400 font-medium">較上個交易日</span>
 </div>
 </div>
 <!-- 5. RTY 期 (羅素2000) -->
@@ -129,7 +128,7 @@
 <div class="text-lg font-black text-white mono-num mt-2">—</div>
 <div class="text-[10px] text-slate-400 mt-1 flex items-center justify-between">
 <span>小型股期指</span>
-<span class="text-purple-400 font-medium">同次掃描快照</span>
+<span class="text-purple-400 font-medium">較上個交易日</span>
 </div>
 </div>
 </div>
@@ -175,7 +174,7 @@
 <span class="text-2xl font-black text-sky-400 mono-num" id="zone02-sm-val">—</span>
 <span class="text-[10px] font-mono text-emerald-300 bg-emerald-900/60 px-2 py-0.5 rounded-full border border-emerald-400/30 flex items-center gap-1">
 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-<span>同次掃描</span>
+<span data-money-comparison="smart">較上個交易日</span>
 </span>
 </div>
 </div>
@@ -205,7 +204,7 @@
 <span class="text-2xl font-black text-rose-400 mono-num" id="zone02-dm-val">—</span>
 <span class="text-[10px] font-mono text-amber-300 bg-amber-900/60 px-2 py-0.5 rounded-full border border-amber-400/30 flex items-center gap-1">
 <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-<span>同次掃描</span>
+<span data-money-comparison="dumb">較上個交易日</span>
 </span>
 </div>
 </div>
@@ -243,10 +242,7 @@
 <span class="text-xl">🛡️</span>
 <span class="text-xs font-black text-white">VIX</span>
 </div>
-<span class="text-[10px] font-mono text-sky-300 bg-sky-900/60 px-2 py-0.5 rounded-full border border-sky-400/30 flex items-center gap-1">
-<span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
-<span>同次掃描快照</span>
-</span>
+<span class="text-[10px] font-mono text-sky-300 bg-sky-900/60 px-2 py-0.5 rounded-full border border-sky-400/30 flex items-center gap-1" data-gauge-comparison="vix">較上週</span>
 </div>
 <!-- 連接漸變弧度 BAR -->
 <div class="relative w-52 h-28 flex items-center justify-center my-1">
@@ -294,10 +290,7 @@
 <span class="text-xl">🇺🇸</span>
 <span class="text-xs font-black text-white">美股恐慌指數</span>
 </div>
-<span class="text-[10px] font-mono text-emerald-300 bg-emerald-900/60 px-2 py-0.5 rounded-full border border-emerald-400/30 flex items-center gap-1">
-<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-<span>同次掃描快照</span>
-</span>
+<span class="text-[10px] font-mono text-emerald-300 bg-emerald-900/60 px-2 py-0.5 rounded-full border border-emerald-400/30 flex items-center gap-1" data-gauge-comparison="fear_greed">較上週</span>
 </div>
 <!-- 連接漸變弧度 BAR -->
 <div class="relative w-52 h-28 flex items-center justify-center my-1">
@@ -345,10 +338,7 @@
 <span class="text-xl">🪙</span>
 <span class="text-xs font-black text-white">加密貨幣情緒指數</span>
 </div>
-<span class="text-[10px] font-mono text-purple-300 bg-purple-900/60 px-2 py-0.5 rounded-full border border-purple-400/30 flex items-center gap-1">
-<span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
-<span>同次掃描快照</span>
-</span>
+<span class="text-[10px] font-mono text-purple-300 bg-purple-900/60 px-2 py-0.5 rounded-full border border-purple-400/30 flex items-center gap-1" data-gauge-comparison="crypto">較上週</span>
 </div>
 <!-- 連接漸變弧度 BAR -->
 <div class="relative w-52 h-28 flex items-center justify-center my-1">
@@ -517,17 +507,7 @@
 </div>
 </div>
 <!-- 自訂代碼搜尋座艙 (搬移至頂部導覽列中段) -->
-<form class="flex items-center gap-1.5 text-xs" onsubmit="handleCustomStockSearch(event)">
-<input class="w-36 sm:w-48 bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-1.5 text-white font-mono text-xs focus:outline-none uppercase" id="input-custom-symbol" placeholder="輸入美股代碼 (例: AAPL)" type="text"/>
-<button class="shrink-0 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition cursor-pointer" type="submit">
-          分析 ↗
-        </button>
-</form>
 <div class="flex items-center gap-2 shrink-0">
-<button class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-slate-300 hover:text-white transition flex items-center gap-1.5" onclick="refreshCurrentStockChart()" title="重新從網路獲取最新行情">
-<span>🔄</span>
-<span class="hidden sm:inline">刷新真實行情</span>
-</button>
 <button class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white transition cursor-pointer" onclick="closeHeroDrawer()">
           ✕
         </button>
