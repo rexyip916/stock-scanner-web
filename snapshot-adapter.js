@@ -53,19 +53,25 @@
     const badge=card.querySelector('.tracking-wider');if(badge&&value)badge.textContent=window.__INDEX_NAMES__[card.dataset.scanIndex];
    }
    const sentiment=d.sentiment||{};
-   const comparison=(element,current,previous,label,unit)=>{
+   const comparison=(element,current,previous,label,unit,relative=false)=>{
     if(!element)return;
-    const valid=Number.isFinite(current)&&Number.isFinite(previous);
-    const delta=valid?current-previous:0;
-    element.textContent=valid?`${label} ${delta>0?'+':''}${delta.toFixed(unit==='分'?0:2)}${unit}`:`未有${label==='較上週'?'上週':'上個交易日'}資料`;
+    const valid=Number.isFinite(current)&&Number.isFinite(previous)&&(!relative||previous>0);
+    const delta=valid?(relative?(current/previous-1)*100:current-previous):0;
+    const amount=Math.abs(delta).toFixed(unit==='%'?2:0).replace(/(\.\d*?[1-9])0+$|\.0+$/, '$1');
+    element.textContent=valid?`${label}${delta>0?'↗️':delta<0?'↘️':'➡️'}${amount||'0'}${unit}`:`未有${label==='較上週'?'上週':'上個交易日'}資料`;
     element.style.color=valid?(delta<0?'#fb7185':delta>0?'#34d399':'#94a3b8'):'#94a3b8';
    };
+   const rows=(d.money_history||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+   const latest=rows.at(-1);
+   const cutoff=latest?new Date(Date.parse(latest.date+'T00:00:00Z')-7*86400000).toISOString().slice(0,10):'';
+   const previousWeek=rows.filter(r=>r.date<=cutoff).at(-1);
    for(const el of document.querySelectorAll('[data-money-comparison]')){
-    const key=el.dataset.moneyComparison;const rows=d.money_history||[];
-    comparison(el,d.money?.[key+'_conf'],rows.length>1?rows.at(-2)[key]:null,'較上個交易日','分');
+    const key=el.dataset.moneyComparison;
+    comparison(el,d.money?.[key+'_conf'],previousWeek?.[key],'較上週','%');
    }
    for(const el of document.querySelectorAll('[data-gauge-comparison]')){
-    const key=el.dataset.gaugeComparison;comparison(el,sentiment[key],sentiment[key+'_previous_week'],'較上週',key==='vix'?'點':'分');
+    const key=el.dataset.gaugeComparison;
+    comparison(el,sentiment[key],sentiment[key+(key==='vix'?'_previous_close':'_previous_week')],key==='vix'?'較上個交易日':'較上週',key==='vix'?'%':'',key==='vix');
    }
 
    for(const id of ['chart-factor-smi','chart-factor-cboe','chart-factor-vix','chart-factor-lev']){const e=document.getElementById(id);if(e)e.textContent='未有同次因子數據';}
