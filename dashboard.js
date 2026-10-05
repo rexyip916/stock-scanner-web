@@ -358,7 +358,7 @@
 
       const posBadge = hero.category === 'early' 
         ? `<span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[10px] font-bold font-mono shrink-0">🚀 突破第 ${hero.age} 天</span>` 
-        : `<span class="px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/30 text-[10px] font-bold font-mono shrink-0">🛡️ 築底第 ${hero.age} 天 (箱體長度${hero.box_duration || '30天'})</span>`;
+        : `<span class="px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/30 text-[10px] font-bold font-mono shrink-0">🛡️ 盤整築底｜箱體 ${hero.box_duration ? String(hero.box_duration).replace(/天$/, '') + ' 個交易日' : '長度未有資料'}</span>`;
 
       // 指數狀態格 (右邊加多一格：指數上升顯示綠色格閃耀並提示與指數同步共振；指數下跌顯示紅色格並出警告句子)
       const ir = hero.index_resonance;
