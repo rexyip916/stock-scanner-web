@@ -376,7 +376,7 @@
         : reboundDays === 0 ? '未確認箱底反彈' : '未有反彈日數資料';
       const patternLabel=marketContextText(hero.pattern_label || '水平箱體');
       const patternCaption=hero.category==='early'
-        ? `🚀 ${patternLabel}突破第 ${hero.age} 個交易日`
+        ? `🚀 ${patternLabel}突破第 ${hero.age} 個交易日${hero.volume_breakout ? '｜🔥 放量突破' : ''}`
         : hero.pattern_type && hero.pattern_type!=='BOX'
           ? `📐 ${patternLabel}｜形態 ${String(hero.box_duration || '—').replace(/天$/, '')} 個交易日`
           : `🛡️ 箱體 ${hero.box_duration ? String(hero.box_duration).replace(/天$/, '') + ' 個交易日' : '長度未有資料'}｜${reboundText}`;
@@ -418,7 +418,7 @@
         <!-- 視覺化能量成交量槽 -->
         <div class="space-y-1.5 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
           <div class="flex justify-between items-center text-[11px] font-bold">
-            <span class="text-slate-300">⚡成交量 <strong class="text-white mono-num">${hero.vol_ratio.toFixed(2)}X</strong></span>
+            <span class="text-slate-300">⚡成交量 <strong class="text-white mono-num">${Number.isFinite(hero.vol_ratio) ? hero.vol_ratio.toFixed(2) + 'X' : '—'}</strong></span>
           </div>
           <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
             <div class="mana-bar-fill h-full rounded-full transition-all duration-500" style="width: ${hero.mana_pct}%"></div>
@@ -3450,7 +3450,7 @@
       if (!selectedHero) return;
       const h = selectedHero;
       const txt = `🏆 【${h.tier} 級英雄】${h.symbol} (${h.sector})\
-⚔️ 綜合戰力 (CP): ${h.cp}\\n📊 能量蓄力: ${h.vol_ratio.toFixed(2)}x (${h.vol_status})\\n🎯 作戰指令: ${h.decision_action}\\n📝 戰術詳情: ${h.decision_desc}`;
+⚔️ 綜合戰力 (CP): ${h.cp}\\n📊 能量蓄力: ${Number.isFinite(h.vol_ratio) ? h.vol_ratio.toFixed(2) + 'x' : '—'} (${h.vol_status})\\n🎯 作戰指令: ${h.decision_action}\\n📝 戰術詳情: ${h.decision_desc}`;
       navigator.clipboard.writeText(txt).then(() => alert(`已複製 ${h.symbol} 戰報！`));
     }
 
