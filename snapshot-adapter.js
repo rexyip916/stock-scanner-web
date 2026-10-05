@@ -15,8 +15,9 @@
   for(const hero of snapshot.heroes){
    const bars=snapshot.charts[hero.symbol]?.prices;
    if(bars?.length>1)hero.change=(bars.at(-1).close/bars.at(-2).close-1)*100;
-   const key=hero.category==='bottom'?'ES':'NQ';const index=d.indices?.[key];
-   hero.index_resonance=index?{index_code:index.symbol,index_name:window.__INDEX_NAMES__[key],index_change:index.change,status:index.change<0?'warning':'bullish',badge_text:'同次大市快照',badge_type:index.change<0?'resonance_warn':'resonance_good',sub_desc:'同一次市場資料；方向共振並非必然關係。'}:null;
+   // New scans carry server-calculated sector pairing and multi-day direction.
+   // Older scans must not revive the former "one down day = warning" rule.
+   if(!hero.index_resonance?.mapping_reason)hero.index_resonance={index_name:'大市參考',status:'unavailable',badge_text:'未能判斷',sub_desc:'舊掃描未包含板塊配對及多日走勢分析，請重新掃描。',advice:'等待新掃描資料。'};
   }
   window.__INITIAL_SECTORS__=d.sectors||[];window.__SCAN_HISTORY__=d.history||[];
   window.__INITIAL_TG_TEXT__=snapshot.tg_text||'';window.__INITIAL_SCAN_TIME__=snapshot.scan_time;

@@ -339,6 +339,15 @@
       renderIndexResonanceCards();
       renderHeroes();
     }
+    function marketContextText(value) {
+      return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    }
+    function marketContextStyle(status) {
+      if(status === 'warning') return {color:'#fb7185',icon:'⚠️'};
+      if(status === 'bullish') return {color:'#34d399',icon:'🟢'};
+      if(status === 'pullback' || status === 'caution') return {color:'#fbbf24',icon:'🟡'};
+      return {color:'#94a3b8',icon:'⚪'};
+    }
     // 產生單張英雄戰牌 DOM
     function buildHeroCard(hero) {
       const isSSR = hero.tier === 'SSR';
@@ -360,36 +369,12 @@
         ? `<span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[10px] font-bold font-mono shrink-0">🚀 突破第 ${hero.age} 天</span>` 
         : `<span class="px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/30 text-[10px] font-bold font-mono shrink-0">🛡️ 盤整築底｜箱體 ${hero.box_duration ? String(hero.box_duration).replace(/天$/, '') + ' 個交易日' : '長度未有資料'}</span>`;
 
-      // 指數狀態格 (右邊加多一格：指數上升顯示綠色格閃耀並提示與指數同步共振；指數下跌顯示紅色格並出警告句子)
       const ir = hero.index_resonance;
       let indexStatusBadge = '';
       if (ir) {
-        const isDrop = (ir.status === 'warning') || (typeof ir.index_change === 'number' && ir.index_change < 0);
-        if (!isDrop) {
-          const changeStr = typeof ir.index_change === 'number' ? `+${ir.index_change.toFixed(2)}%` : '';
-          const codeStr = ir.index_name ? `${ir.index_name} ` : (ir.index_code ? `${ir.index_code} ` : '');
-          indexStatusBadge = `
-            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold font-mono shadow-[0_0_10px_rgba(16,185,129,0.35)] animate-pulse shrink-0" title="指數狀態：與 ${codeStr}同步共振">
-              <span class="relative flex h-2 w-2 shrink-0">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
-              </span>
-              <span>✨ ${codeStr}${changeStr} 與指數同步共振</span>
-            </span>
-          `;
-        } else {
-          const changeStr = typeof ir.index_change === 'number' ? `${ir.index_change.toFixed(2)}%` : '';
-          const codeStr = ir.index_name ? `${ir.index_name} ` : (ir.index_code ? `${ir.index_code} ` : '指數 ');
-          indexStatusBadge = `
-            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/50 text-[10px] font-bold font-mono shadow-[0_0_10px_rgba(244,63,94,0.35)] animate-pulse shrink-0" title="指數逆風分歧警示">
-              <span class="relative flex h-2 w-2 shrink-0">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-400"></span>
-              </span>
-              <span>⚠️ ${codeStr}${changeStr} 逆風警告：指數拖累，慎防衝高假突破！</span>
-            </span>
-          `;
-        }
+        const style = marketContextStyle(ir.status);
+        const change = typeof ir.index_change === 'number' ? `${ir.index_change >= 0 ? '+' : ''}${ir.index_change.toFixed(2)}%` : '';
+        indexStatusBadge = `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold font-mono border" style="color:${style.color};border-color:${style.color}66;background:${style.color}15" title="${marketContextText(ir.sub_desc)}">${style.icon} ${marketContextText(ir.index_name || '大市參考')} <span style="color:${typeof ir.index_change === 'number' ? (ir.index_change<0?'#fb7185':'#34d399') : style.color}">${change}</span> ${marketContextText(ir.badge_text || '未能判斷')}</span>`;
       }
 
       card.innerHTML = `
@@ -1714,38 +1699,17 @@
       const irDesc = document.getElementById('drawer-ir-desc');
       const irAdvice = document.getElementById('drawer-ir-advice');
 
-      if (irBox && h.index_resonance) {
+      if (irBox) {
         const ir = h.index_resonance;
-        if (ir.status === 'warning') {
-          irBox.className = "p-4 rounded-2xl border bg-rose-950/40 border-rose-500/40 space-y-2";
-          if (irTitle) irTitle.className = "text-xs font-black text-rose-300 flex items-center gap-1.5";
-          if (irBadge) {
-            irBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-black bg-rose-500/20 text-rose-300 border border-rose-500/40";
-            irBadge.textContent = "⚠️ 逆風分歧";
-          }
-          if (irDesc) {
-            irDesc.className = "text-xs leading-relaxed text-rose-200 font-medium";
-            irDesc.textContent = ir.sub_desc;
-          }
-          if (irAdvice) {
-            irAdvice.className = "text-rose-400 font-bold";
-            irAdvice.textContent = "收市前謹慎：道指拖累，慎防衝高假突破！";
-          }
-        } else {
-          irBox.className = "p-4 rounded-2xl border bg-emerald-950/40 border-emerald-500/40 space-y-2";
-          if (irTitle) irTitle.className = "text-xs font-black text-emerald-300 flex items-center gap-1.5";
-          if (irBadge) {
-            irBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
-            irBadge.textContent = ir.badge_text;
-          }
-          if (irDesc) {
-            irDesc.className = "text-xs leading-relaxed text-emerald-100 font-medium";
-            irDesc.textContent = ir.sub_desc;
-          }
-          if (irAdvice) {
-            irAdvice.className = "text-emerald-400 font-bold";
-            irAdvice.textContent = "收市前推薦：大盤同向助攻，突破續航力強！";
-          }
+        irBox.hidden = !ir;
+        if(ir) {
+          const style=marketContextStyle(ir.status);
+          irBox.className='p-4 rounded-2xl border space-y-2';
+          irBox.style.borderColor=style.color+'66'; irBox.style.background=style.color+'15';
+          if(irTitle){irTitle.className='text-xs font-black';irTitle.style.color=style.color;irTitle.textContent=`${ir.index_name || '大市參考'}走勢參考`;}
+          if(irBadge){irBadge.className='px-2.5 py-0.5 rounded-full text-xs font-black';irBadge.style.color=style.color;irBadge.textContent=`${style.icon} ${ir.badge_text || '未能判斷'}`;}
+          if(irDesc){irDesc.className='text-xs leading-relaxed';irDesc.style.color=style.color;irDesc.textContent=ir.sub_desc || '';}
+          if(irAdvice){irAdvice.className='font-bold';irAdvice.style.color=style.color;irAdvice.textContent=ir.advice || '';}
         }
       }
 
