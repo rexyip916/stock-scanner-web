@@ -1,5 +1,6 @@
 /* Original dashboard UI, served from one immutable scan instead of live APIs. */
 (async()=>{
+ window.__INDEX_NAMES__={ES:'S&P',NQ:'納指',YM:'道指',SOX:'費城',RTY:'羅素2000'};
  const status=document.getElementById('snapshot-status');const nativeFetch=window.fetch.bind(window);
  const id=new URLSearchParams(location.search).get('scan')||'';
  try {
@@ -15,7 +16,7 @@
    const bars=snapshot.charts[hero.symbol]?.prices;
    if(bars?.length>1)hero.change=(bars.at(-1).close/bars.at(-2).close-1)*100;
    const key=hero.category==='bottom'?'ES':'NQ';const index=d.indices?.[key];
-   hero.index_resonance=index?{index_code:index.symbol,index_name:index.symbol,index_change:index.change,status:index.change<0?'warning':'bullish',badge_text:'同次大市快照',badge_type:index.change<0?'resonance_warn':'resonance_good',sub_desc:'同一次市場資料；方向共振並非必然關係。'}:null;
+   hero.index_resonance=index?{index_code:index.symbol,index_name:window.__INDEX_NAMES__[key],index_change:index.change,status:index.change<0?'warning':'bullish',badge_text:'同次大市快照',badge_type:index.change<0?'resonance_warn':'resonance_good',sub_desc:'同一次市場資料；方向共振並非必然關係。'}:null;
   }
   window.__INITIAL_SECTORS__=d.sectors||[];window.__SCAN_HISTORY__=d.history||[];
   window.__INITIAL_TG_TEXT__=snapshot.tg_text||'';window.__INITIAL_SCAN_TIME__=snapshot.scan_time;
@@ -49,7 +50,7 @@
     const value=d.indices?.[card.dataset.scanIndex];const nums=card.querySelectorAll('.mono-num');
     if(nums[0])nums[0].textContent=value?`${value.change>=0?'+':''}${value.change.toFixed(2)}%`:'—';
     if(nums[1])nums[1].textContent=value?value.price.toLocaleString():'—';
-    const badge=card.querySelector('.tracking-wider');if(badge&&value)badge.textContent=card.dataset.scanIndex;
+    const badge=card.querySelector('.tracking-wider');if(badge&&value)badge.textContent=window.__INDEX_NAMES__[card.dataset.scanIndex];
    }
    const sentiment=d.sentiment||{};
    for(const id of ['chart-factor-smi','chart-factor-cboe','chart-factor-vix','chart-factor-lev']){const e=document.getElementById(id);if(e)e.textContent='未有同次因子數據';}

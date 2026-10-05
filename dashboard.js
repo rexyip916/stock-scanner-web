@@ -77,10 +77,10 @@
 
     // 切換雙軌篩選維度：'sector' (板塊) 或 'index' (大盤共振)
     for (const option of INDEX_RESONANCE_OPTIONS) {
-      const key = {QQQ:'NQ', SOXX:'SOX', SPY:'ES', DIA:'YM', IWM:'RTY'}[option.code];
+      const key = {QQQ:'NQ', SOXX:'SOX', SOX:'SOX', SPY:'ES', DIA:'YM', IWM:'RTY'}[option.code];
       const actual = window.__SCAN_SNAPSHOT__.dashboard?.indices?.[key];
       option.available = !!actual;
-      if(actual) { option.code = actual.symbol; option.name = actual.symbol; option.desc = actual.name + '（同次掃描）'; }
+      if(actual) { option.code = actual.symbol; option.name = window.__INDEX_NAMES__[key]; option.desc = window.__INDEX_NAMES__[key] + '（同次掃描）'; }
       if(option.code === 'WARN') { const changes=Object.values(window.__SCAN_SNAPSHOT__.dashboard?.indices || {}).map(i=>i.change); option.available=changes.length>0; option.change=changes.length?Math.min(...changes):0; option.name='跌市提示'; option.desc='同次指數風險篩選'; continue; }
       option.change = actual?.change ?? 0;
       option.status = actual ? '同次掃描' : '未有指數資料';
@@ -1816,7 +1816,7 @@
     const ZONE01_INDICES = {
       ES: {
         code: "ES",
-        badge: "ES 期",
+        badge: "S&P",
         badgeClass: "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40",
         name: "S&P 500 標普500期貨",
         price: "7,712.50",
@@ -1834,7 +1834,7 @@
       },
       NQ: {
         code: "NQ",
-        badge: "NQ 期",
+        badge: "納指",
         badgeClass: "bg-sky-500/20 text-sky-400 border border-sky-500/40",
         name: "Nasdaq 100 納斯達克期貨",
         price: "30,725.20",
@@ -1852,7 +1852,7 @@
       },
       SOX: {
         code: "SOX",
-        badge: "SOX 期",
+        badge: "費城",
         badgeClass: "bg-amber-500/20 text-amber-300 border border-amber-500/40",
         name: "SOX 費城半導體期貨",
         price: "7,180.50",
@@ -1870,7 +1870,7 @@
       },
       YM: {
         code: "YM",
-        badge: "YM 期",
+        badge: "道指",
         badgeClass: "bg-slate-800 text-slate-300 border border-slate-700",
         name: "Dow Jones 道瓊斯期貨",
         price: "51,550.00",
@@ -1888,7 +1888,7 @@
       },
       RTY: {
         code: "RTY",
-        badge: "RTY 期",
+        badge: "羅素2000",
         badgeClass: "bg-purple-500/20 text-purple-400 border border-purple-500/40",
         name: "Russell 2000 羅素2000期貨",
         price: "2,650.80",
@@ -1914,9 +1914,9 @@
       idx.change = actual ? `${actual.change >= 0 ? '+' : ''}${actual.change.toFixed(2)}%` : '未有資料';
       idx.quoteSymbol = actual?.chart_symbol || actual?.symbol || '';
       idx.chartNote = actual?.chart_note || '';
-      if(actual && !actual.symbol.endsWith('=F')) idx.name = `${key} ${actual.symbol === '^SOX' ? '費城半導體指數' : actual.symbol}`;
+      idx.name = window.__INDEX_NAMES__[key];
       idx.status = '同次掃描快照'; idx.range = '見真實圖表'; idx.ema50 = '見真實圖表'; idx.structure = '見同次價格分析';
-      idx.badge = key;
+      idx.badge = window.__INDEX_NAMES__[key];
     }
 
     let currentIndexCode = "ES";
