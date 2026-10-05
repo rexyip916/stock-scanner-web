@@ -437,7 +437,7 @@
 </div>
 </div>
 </section>
-<!-- ZONE 05: 第五排 · 🛡️ 盤整築底/上升整固 -->
+<!-- ZONE 05: 第五排 · 🛡️ 箱體／收窄形態整理 -->
 <section class="bg-gradient-to-b from-sky-950/20 via-slate-900/80 to-slate-900/90 border-2 border-sky-500/30 rounded-3xl p-5 sm:p-6 shadow-2xl relative overflow-hidden backdrop-blur-sm ring-1 ring-sky-500/20">
 <div class="absolute top-0 left-0 w-32 h-1.5 bg-gradient-to-r from-sky-400 to-teal-400"></div>
 <div class="flex items-center justify-between mb-4 pb-2 border-b border-sky-500/20">
@@ -451,7 +451,7 @@
                 ZONE 05
               </span>
 <h2 class="text-sm sm:text-base font-black text-white tracking-wide">
-                盤整築底/上升整固
+                箱體／收窄形態整理
               </h2>
 </div>
 </div>
@@ -476,7 +476,7 @@
                 ZONE 06
               </span>
 <h2 class="text-sm sm:text-base font-black text-white tracking-wide">
-                升勢突破
+                箱體／收窄形態突破
               </h2>
 </div>
 </div>
@@ -552,7 +552,7 @@
 </div>
 </div>
 <!-- 畫布容器 (主圖表與十字準星 Tooltip) -->
-<div class="relative w-full h-80 sm:h-[420px] bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden select-none" id="hero-chart-container">
+<div class="flex items-center gap-2 flex-wrap"><span class="px-3 py-1.5 rounded-xl border text-xs font-black" id="box-verdict-pill"><span id="box-verdict-text">載入形態分析…</span></span><span class="hidden text-xs text-pink-400" id="legend-triangle-pill"></span></div><div class="relative w-full h-80 sm:h-[420px] bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden select-none" id="hero-chart-container">
 <canvas class="w-full h-full block cursor-crosshair chart-canvas" id="hero-stock-canvas"></canvas>
 <!-- 浮動十字準星 Tooltip -->
 <div class="absolute pointer-events-none hidden z-30 bg-slate-900/95 border border-slate-700 p-2.5 rounded-xl shadow-2xl text-xs space-y-1 backdrop-blur-md min-w-[190px]" id="hero-chart-tooltip">
@@ -577,7 +577,7 @@
 <!-- 加載中遮罩 -->
 <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2 z-20" id="hero-chart-loading">
 <div class="w-8 h-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin"></div>
-<span class="text-xs text-slate-300 font-mono">正在從網路獲取最新實盤數據與計算箱體結構...</span>
+<span class="text-xs text-slate-300 font-mono">載入這次掃描保存的圖表及形態分析…</span>
 </div>
 </div>
 </section>
@@ -587,42 +587,42 @@
 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
 <!-- 1. 核心覆蓋率 -->
 <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between space-y-2">
-<span class="text-xs text-slate-300 font-bold">核心覆蓋率 (Coverage)</span>
+<span class="text-xs text-slate-300 font-bold">形態覆蓋率 (Coverage)</span>
 <div class="text-2xl font-black text-white font-mono tracking-tight" id="metric-cov-val">--</div>
-<div class="text-[11px] text-slate-400">衡量收盤價落在箱體內的比例，反映整理區間有效性</div>
+<div class="text-[11px] text-slate-400">衡量形成期間收盤價落在箱體／收窄上下軌內的比例</div>
 </div>
 <!-- 2. 箱體波幅寬度 -->
 <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between space-y-2">
-<span class="text-xs text-slate-300 font-bold">箱體波幅寬度 (Width)</span>
+<span class="text-xs text-slate-300 font-bold">形態末端波幅 (Width)</span>
 <div class="text-2xl font-black text-white font-mono tracking-tight" id="metric-width-val">--</div>
-<div class="text-[11px] text-slate-400">箱頂與箱底的價差幅度比例，反映波動是否緊湊有序</div>
+<div class="text-[11px] text-slate-400">箱體或收窄形態末端上下軌的價差比例</div>
 </div>
 <!-- 3. 橫盤持續天數 -->
 <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between space-y-2">
-<span class="text-xs text-slate-300 font-bold">橫盤持續天數 (Duration)</span>
+<span class="text-xs text-slate-300 font-bold">形態持續天數 (Duration)</span>
 <div class="text-2xl font-black text-white font-mono tracking-tight" id="metric-dur-val">-- 日</div>
-<div class="text-[11px] text-slate-400">股價在箱體內橫盤整理天數，反映籌碼換手沉澱時間</div>
+<div class="text-[11px] text-slate-400">有效價格形態包含的交易日數</div>
 </div>
-<!-- 4. 現價在箱內百分比 -->
+<!-- 4. 現價在形態內位置 -->
 <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between space-y-2">
-<span class="text-xs text-slate-300 font-bold">現價在箱內百分比</span>
+<span class="text-xs text-slate-300 font-bold">現價在形態內位置</span>
 <div class="text-2xl font-black text-amber-400 font-mono tracking-tight" id="metric-pos-val">--</div>
-<div class="text-[11px] text-slate-400">現價於箱體的高度位置，0%為箱底支撐、100%為箱頂阻力</div>
+<div class="text-[11px] text-slate-400">相對形成期末端上下軌的位置；突破後可能高於100%</div>
 </div>
 </div>
 <!-- ======================================================== -->
-<!-- 盤整築底戰術藍圖 -->
+<!-- 形態支持／阻力參考 -->
 <!-- ======================================================== -->
 <div class="bg-slate-900/80 border border-amber-500/30 rounded-2xl p-4 sm:p-5 shadow-xl space-y-3.5">
 <div class="flex items-center gap-2">
 <span class="text-sm font-black text-amber-300 flex items-center gap-1.5">
-<span>🛡️</span> 盤整築底戰術藍圖
+<span>🛡️</span> 形態支持／阻力參考
           </span>
 </div>
 <!-- 4 大數值區塊 (箱底防守、破位止損、箱頂目標、預期盈虧比) -->
 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
 <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl">
-<div class="text-xs text-slate-400">箱底防守 (Support)</div>
+<div class="text-xs text-slate-400">下軌支持 (Support)</div>
 <div class="text-base sm:text-lg font-bold text-emerald-400 font-mono mt-1" id="strat-support">$0.00</div>
 </div>
 <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl">
@@ -630,7 +630,7 @@
 <div class="text-base sm:text-lg font-bold text-rose-400 font-mono mt-1" id="strat-stoploss">$0.00</div>
 </div>
 <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl">
-<div class="text-xs text-slate-400">箱頂目標 (Target 1)</div>
+<div class="text-xs text-slate-400">目標參考 (Target 1)</div>
 <div class="text-base sm:text-lg font-bold text-amber-300 font-mono mt-1" id="strat-target1">$0.00</div>
 </div>
 <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl">
