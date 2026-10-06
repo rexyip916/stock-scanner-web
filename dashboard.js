@@ -2960,6 +2960,11 @@
         dmBadge = "情緒穩定 ⚖️";
       }
 
+      const officialRegime=document.getElementById('official-money-regime');
+      const officialAnalysis=document.getElementById('official-money-analysis');
+      if(officialRegime) officialRegime.textContent=regime;
+      if(officialAnalysis) officialAnalysis.textContent=`Smart Money ${smart}%｜Dumb Money ${dumb}%｜剪刀差 ${spread>0?'+':''}${spread}%${isCustom?'（手動輸入）':''}`;
+
       // 1. ZONE 02 儀表卡
       const zSm = document.getElementById('zone02-sm-val');
       const zDm = document.getElementById('zone02-dm-val');
@@ -3007,6 +3012,7 @@
       else for(const id of ['zone02-sm-val','zone02-dm-val']) {const e=document.getElementById(id);if(e)e.textContent='—';}
       const source=document.getElementById('snapshot-money-source');
       if(source) source.textContent=money?.source || '這次掃描未有 Smart / Dumb Money 資料';
+      for(const el of document.querySelectorAll('[data-money-source]')) el.textContent=money?.source || '這次掃描未有 Smart / Dumb Money 資料';
     }
 
     async function refreshSentimentEngine() {
@@ -3047,30 +3053,7 @@
       }
     }
 
-    // 供未來新數據持續調用的計算公式 (Continuous Multi-Factor Quantile Model)
-    function calculateSmartDumbFromPrice(prices) {
-      if (!prices || prices.length < 10) return { smart: 41.0, dumb: 36.0, spread: 5.0 };
-      const curr = prices[prices.length - 1];
-      const p20 = prices[Math.max(0, prices.length - 20)];
-      const roc20 = (curr - p20) / p20;
-      const w50 = prices.slice(-50);
-      const sma50 = w50.reduce((a, b) => a + b, 0) / w50.length;
-      const dist50 = (curr - sma50) / sma50;
-      const max10 = Math.max(...prices.slice(-10));
-      const dd10 = (curr - max10) / max10;
-
-      let rawDm = 0.50 + 2.2 * dist50 + 1.8 * roc20 + 3.2 * dd10;
-      rawDm = Math.max(0.15, Math.min(0.85, rawDm));
-
-      let rawSm = 0.42 - 1.8 * dist50 - 4.2 * Math.min(0, dd10) - 0.8 * roc20;
-      rawSm = Math.max(0.20, Math.min(0.85, rawSm));
-
-      const sm = Math.round(rawSm * 1000) / 10;
-      const dm = Math.round(rawDm * 1000) / 10;
-      return { smart: sm, dumb: dm, spread: Math.round((sm - dm) * 10) / 10 };
-    }
-
-    // 歷史資金與大盤走勢數據（完整 251 個交易日真實在線數據，S&P 500 來源自 Yahoo Finance / TradingView，Smart & Dumb Money 精準對齊 價格模型（非官方）實盤）
+    // Historical confidence values are dated readings from the public SentimenTrader chart.
     let HISTORICAL_CHART_DATA = (window.__SCAN_HISTORY__ || []);
 
     let currentChartRange = '6M';

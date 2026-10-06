@@ -41,9 +41,9 @@
    if(path==='/api/history')return json(d.history||[]);
    if(path==='/api/calibration'){
     if(options.method==='POST')return json({error:'靜態網站只支援當前瀏覽器校準'},405);
-    return d.money?json({smart:d.money.smart_conf,dumb:d.money.dumb_conf,date:snapshot.scan_time,is_default:true}):json({},404);
+    return d.money?json({smart:d.money.smart_conf,dumb:d.money.dumb_conf,date:d.money.date||snapshot.scan_time,is_default:true}):json({},404);
    }
-   if(path==='/api/sentiment')return d.money?json({smart_money:d.money.smart_conf,dumb_money:d.money.dumb_conf,components:[],source:d.money.source}):json({},404);
+   if(path==='/api/sentiment')return d.money?json({smart_money:d.money.smart_conf,dumb_money:d.money.dumb_conf,components:[],source:d.money.source,date:d.money.date}):json({},404);
    return json({error:'此功能未包含在掃描快照'},404);
   };
   function fillMarket(){

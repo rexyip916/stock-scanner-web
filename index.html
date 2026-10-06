@@ -141,7 +141,7 @@
           </h2>
 </div>
 <div class="flex items-center gap-2 flex-wrap">
-<button class="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-indigo-500/20 border border-amber-400/80 hover:border-amber-300 hover:bg-amber-500/30 text-xs font-black text-amber-200 hover:text-white transition duration-200 flex items-center gap-1.5 shadow-md shadow-amber-950/40 active:scale-95 cursor-pointer" onclick="openSentimenTraderCalibratorModal()" title="校準 價格模型（非官方）讀數">
+<button class="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-indigo-500/20 border border-amber-400/80 hover:border-amber-300 hover:bg-amber-500/30 text-xs font-black text-amber-200 hover:text-white transition duration-200 flex items-center gap-1.5 shadow-md shadow-amber-950/40 active:scale-95 cursor-pointer" onclick="openSentimenTraderCalibratorModal()" title="手動輸入讀數（只影響當前顯示）">
 <span>🎯</span>
 <span>校準讀數 ↗</span>
 </button>
@@ -151,6 +151,7 @@
 </button>
 </div>
 </div>
+<p class="text-[10px] text-slate-400 mb-3" id="snapshot-money-source">讀取官方資料日期…</p>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 <!-- Smart Money (巨鯨主力) -->
 <div class="bg-slate-950/90 border border-sky-500/40 rounded-2xl p-4 shadow-lg space-y-3 relative overflow-hidden transition duration-300 cursor-default">
@@ -912,6 +913,7 @@
         </div>
 <div>
 <h3 class="text-base sm:text-lg font-black text-white">S&amp;P 500 走勢 vs Smart Money · Dumb Money</h3>
+<p class="text-[10px] text-slate-400 mt-1" data-money-source>讀取官方資料日期…</p>
 </div>
 </div>
 <button class="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white transition cursor-pointer" onclick="closeChartDrawer()">
@@ -1029,9 +1031,9 @@
 <div class="p-3.5 rounded-2xl bg-indigo-950/30 border border-indigo-500/30 flex items-start gap-3">
 <span class="text-xl shrink-0">🧭</span>
 <div class="text-xs space-y-1">
-<div class="font-black text-indigo-200">當前算力狀態研判：【⚖️ 雙重中性平衡期】</div>
+<div class="font-black text-indigo-200" id="official-money-regime">讀取資料…</div>
 <div class="text-slate-300 leading-relaxed">
-            Dumb Money (36.0%) 與 Smart Money (41.0%) 均處於 30%~70% 中性區間，剪刀差為 +5.0%。價格模型（非官方）官方報告定調：<strong>「Dumb Money Confidence is neutral and Smart Money Confidence is neutral」</strong>。散戶自 8 月高點 72% 快速降溫，主力常態套保部分回補，大盤報 7,743 點，博弈進入良性中性震盪，宜專注精選個股結構！
+            <span id="official-money-analysis">讀取官方歷史數據…</span>
           </div>
 </div>
 </div>
