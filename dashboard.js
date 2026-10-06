@@ -371,7 +371,7 @@
         ? `🚀 ${patternLabel}突破第 ${hero.age} 個交易日${hero.volume_breakout ? '｜🔥 放量突破' : ''}`
         : hero.pattern_type && hero.pattern_type!=='BOX'
           ? `📐 ${patternLabel}｜形態 ${String(hero.box_duration || '—').replace(/天$/, '')} 個交易日`
-          : `🛡️ 箱體 ${hero.box_duration ? String(hero.box_duration).replace(/天$/, '') + ' 個交易日' : '長度未有資料'}｜${reboundText}`;
+          : `🛡️ 箱體 ${hero.box_duration ? String(hero.box_duration).replace(/天$/, '') + ' 個交易日' : '長度未有資料'}｜${reboundText}${hero.volume_rebound ? '｜🔥 放量反彈' : ''}`;
       const posBadge = hero.category === 'early' 
         ? `<span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[10px] font-bold font-mono shrink-0">${patternCaption}</span>`
         : `<span class="px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/30 text-[10px] font-bold font-mono shrink-0">${patternCaption}</span>`;
