@@ -1,3 +1,19 @@
+    function priceChangeLabel(change) {
+      if (!Number.isFinite(change)) return '未有資料';
+      if (change >= 2) return '🚀 強勢上升';
+      if (change > 0) return '↗️ 溫和上升';
+      if (change === 0) return '➡️ 持平';
+      if (change > -2) return '↘️ 溫和回落';
+      return '⚠️ 明顯下跌';
+    }
+
+    function moneyStateLabel(score, smart) {
+      if (!Number.isFinite(score)) return '未有資料';
+      const level = score < 25 ? 0 : score < 40 ? 1 : score <= 60 ? 2 : score < 75 ? 3 : 4;
+      return (smart ? ['深度低位', '低位區間', '中性區間', '高位區間', '極端高位']
+        : ['極度恐慌', '悲觀不安', '情緒中性', '樂觀興奮', '極度亢奮'])[level];
+    }
+
 
     const HEROES = (window.__INITIAL_HEROES__ && window.__INITIAL_HEROES__.length) ? window.__INITIAL_HEROES__ : [];
     const SECTORS = (window.__INITIAL_SECTORS__ && window.__INITIAL_SECTORS__.length) ? window.__INITIAL_SECTORS__ : [];
@@ -131,31 +147,13 @@
       }
 
       const sorted = [...SECTORS].sort((a, b) => b.change - a.change);
-      let displayList = sorted;
-
-      if (!isAllSectorsExpanded && sorted.length >= 4) {
-        const top2Strong = sorted.slice(0, 2);
-        const top2Weak = sorted.slice(-2);
-        displayList = [
-          { ...top2Strong[0], badge: "🥇 最強 #1", type: "strong" },
-          { ...top2Strong[1], badge: "🥈 最強 #2", type: "strong" },
-          { ...top2Weak[0], badge: "🥶 最弱 #1", type: "weak" },
-          { ...top2Weak[1], badge: "❄️ 最弱 #2", type: "weak" },
-        ];
-      } else {
-        displayList = sorted.map((s, idx) => {
-          let badge = `#${idx + 1}`;
-          if (idx === 0) badge = "🥇 最強 #1";
-          else if (idx === 1) badge = "🥈 最強 #2";
-          else if (idx === sorted.length - 1) badge = "🥶 最弱 #1";
-          else if (idx === sorted.length - 2) badge = "❄️ 最弱 #2";
-          return {
-            ...s,
-            badge,
-            type: s.change >= 0 ? "strong" : "weak"
-          };
-        });
-      }
+      const ranked = sorted.map((s, idx) => ({
+        ...s,
+        badge: `升跌幅排名 #${idx + 1}`,
+        type: s.change >= 0 ? "strong" : "weak"
+      }));
+      const displayList = !isAllSectorsExpanded && ranked.length >= 4
+        ? [...ranked.slice(0, 2), ...ranked.slice(-2)] : ranked;
 
       displayList.forEach(s => {
         const isSel = currentSector === s.name;
@@ -172,9 +170,7 @@
 
         btn.className = "p-3.5 rounded-2xl border text-left transition duration-300 flex flex-col justify-between space-y-2.5 shadow-md cursor-pointer " + borderClass;
 
-        const subTag = isStrong 
-          ? (s.change >= 2.0 ? '🔥 資金瘋搶' : '⚡ 穩健跟隨')
-          : '❄️ 資金流出';
+        const subTag = priceChangeLabel(s.change);
 
         btn.innerHTML = `
           <div class="flex items-center justify-between">
@@ -223,12 +219,8 @@
         const card = document.createElement('button');
         card.onclick = () => filterIndexResonance(item.code);
 
-        const rankBadge = idx === 0 ? "🥇 最強 #1" : idx === 1 ? "🥈 最強 #2"
-          : idx === sortedResonance.length - 1 ? "🥶 最弱 #1"
-          : idx === sortedResonance.length - 2 ? "❄️ 最弱 #2" : `#${idx + 1}`;
-        const subTag = item.change >= 2.0 
-          ? '🔥 資金瘋搶' 
-          : (item.change >= 0 ? '⚡ 穩健跟隨' : '❄️ 資金流出');
+        const rankBadge = `升跌幅排名 #${idx + 1}`;
+        const subTag = priceChangeLabel(item.change);
 
         const borderClass = isSel
           ? (isWarn 
@@ -2976,8 +2968,8 @@
       const zDmBar = document.getElementById('zone02-dm-bar');
       if (zSm) zSm.textContent = smart + '%';
       if (zDm) zDm.textContent = dumb + '%';
-      if (zSmSub) zSmSub.textContent = smSub;
-      if (zDmSub) zDmSub.textContent = dmSub;
+      if (zSmSub) zSmSub.textContent = moneyStateLabel(smart, true);
+      if (zDmSub) zDmSub.textContent = moneyStateLabel(dumb, false);
       if (zSmBadge) zSmBadge.textContent = smBadge;
       if (zDmBadge) zDmBadge.textContent = dmBadge;
       if (zSmBar) zSmBar.style.width = Math.min(100, Math.max(0, smart)) + '%';

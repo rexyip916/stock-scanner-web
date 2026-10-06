@@ -78,7 +78,7 @@
    for(const id of ['chart-factor-smi','chart-factor-cboe','chart-factor-vix','chart-factor-lev']){const e=document.getElementById(id);if(e)e.textContent='未有同次因子數據';}
    for(const card of document.querySelectorAll('[data-scan-gauge]')){
     const key=card.dataset.scanGauge;const value=sentiment[key];const num=card.querySelector('[data-gauge-value]');if(num)num.textContent=Number.isFinite(value)?value.toFixed(key==='vix'?2:0):'—';
-    const label=card.querySelector('[data-gauge-label]');if(label)label.textContent=key==='vix'?(Number.isFinite(value)?(value>=25?'高波動區':value>=20?'波動升溫':'較低波動區'):'未有資料'):(sentiment[key+'_label']||'未有資料');
+    const label=card.querySelector('[data-gauge-label]');if(label)label.textContent=key==='vix'?(Number.isFinite(value)?(value>=30?'極高波動':value>=25?'高波動':value>=20?'波動偏高':value>=15?'波動溫和':'低波動'):'未有資料'):(sentiment[key+'_label']||'未有資料');
     const needle=card.querySelector('[data-gauge-needle]');if(needle&&Number.isFinite(value)){const fraction=key==='vix'?(value-10)/30:value/100;needle.setAttribute('transform',`rotate(${Math.max(0,Math.min(1,fraction))*180-90},100,95)`);needle.removeAttribute('visibility');}
    }
    const source=document.getElementById('snapshot-money-source');if(source)source.textContent=d.money?.source||'這次掃描未有 Smart / Dumb Money 資料';
