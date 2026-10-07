@@ -1330,7 +1330,7 @@
           ctx.font = '10px sans-serif';
           ctx.textAlign = 'left';
           ctx.textBaseline = 'bottom';
-          ctx.fillText('水平支阻參考（非篩選）', left + 4, Math.max(margin.top + 14, top - 4));
+          ctx.fillText('參考區間', left + 4, Math.max(margin.top + 14, top - 4));
           ctx.restore();
         }
       }
