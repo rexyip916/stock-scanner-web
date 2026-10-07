@@ -1164,26 +1164,6 @@
               ctx.stroke();
             });
 
-            // 在三角形上方繪製專屬標題徽章
-            const triBanner = `📐 ${tri.label} (收縮率 +${tri.contractionRatio}% · 現僅差 ${Number(tri.currentSpreadPct).toFixed(1)}%)`;
-            ctx.font = "bold 10px sans-serif";
-            const tbMetrics = ctx.measureText(triBanner);
-            const tbW = tbMetrics.width + 16;
-            const tbX = Math.max(margin.left + 8, Math.min(margin.left + chartW - tbW - 8, xL1 + 10));
-            const tbY = Math.max(margin.top + 28, yCurUpper - 22);
-
-            ctx.fillStyle = "rgba(15, 23, 42, 0.95)";
-            ctx.strokeStyle = "#f472b6";
-            ctx.lineWidth = 1.2;
-            ctx.beginPath();
-            ctx.roundRect(tbX, tbY, tbW, 19, 5);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.fillStyle = "#f472b6";
-            ctx.textAlign = "left";
-            ctx.textBaseline = "middle";
-            ctx.fillText(triBanner, tbX + 8, tbY + 9.5);
           }
         } else if (hasActiveBox) {
           // 2B. 若非三角形且為客觀箱體，繪製「箱形橫行區間 (Consolidation Box)」
