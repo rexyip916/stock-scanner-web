@@ -969,7 +969,8 @@
         const candidateRegimes = [
           currentChartData.structure.currentRegime,
           currentChartData.structure.previousRegime,
-          currentChartData.structure.previousPreviousRegime
+          currentChartData.structure.previousPreviousRegime,
+          ...(currentChartData.structure.referenceRanges || [])
         ].filter(Boolean);
 
         candidateRegimes.forEach(r => {
@@ -1326,6 +1327,31 @@
               ctx.fillText(bannerTxt, bX + 8, bY + 9.5);
             }
           });
+        }
+      }
+
+      // Display references separately; these are never confirmed screening formations.
+      if (showChartBox) {
+        for (const reference of currentChartData.structure?.referenceRanges || []) {
+          const start = allPrices.findIndex(bar => bar.date === reference.startDate);
+          const end = allPrices.findIndex(bar => bar.date === reference.endDate);
+          if (start < 0 || end < chartViewStart || start >= chartViewEnd) continue;
+          const left = Math.max(margin.left, getX(start) - barSpacing * 0.5);
+          const right = Math.min(margin.left + chartW, getX(end) + barSpacing * 0.5);
+          const top = getY(reference.resistance);
+          const bottom = getY(reference.support);
+          ctx.save();
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([6, 5]);
+          ctx.strokeRect(left, top, right - left, bottom - top);
+          ctx.setLineDash([]);
+          ctx.fillStyle = '#cbd5e1';
+          ctx.font = '10px sans-serif';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText('水平支阻參考（非篩選）', left + 4, Math.max(margin.top + 14, top - 4));
+          ctx.restore();
         }
       }
 
