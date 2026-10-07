@@ -1737,7 +1737,7 @@
 
       // TradingView 外鏈
       const tvLink = document.getElementById('drawer-tv-link');
-      if (tvLink) tvLink.href = 'https://www.tradingview.com/chart/?symbol=' + h.symbol;
+      if (tvLink) tvLink.href = 'https://tw.tradingview.com/chart/?symbol=' + h.symbol;
 
       // 更新 Sample 範例 Pill 的高亮狀態
       updateSamplePillStates(symbol);
@@ -1979,7 +1979,7 @@
       // TradingView 直連按鈕
       const tvBtn = document.getElementById("idx-tv-button");
       if (tvBtn) {
-        tvBtn.href = `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(idx.tvSymbol)}`;
+        tvBtn.href = `https://tw.tradingview.com/chart/?symbol=${encodeURIComponent(idx.tvSymbol)}`;
         tvBtn.title = `在 TradingView 開啟 ${idx.badge} 實盤圖表`;
       }
 
