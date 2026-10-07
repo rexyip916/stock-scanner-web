@@ -970,6 +970,7 @@
           currentChartData.structure.currentRegime,
           currentChartData.structure.previousRegime,
           currentChartData.structure.previousPreviousRegime,
+          ...(currentChartData.structure.displayPatterns || []),
           ...(currentChartData.structure.referenceRanges || [])
         ].filter(Boolean);
 
@@ -1051,6 +1052,10 @@
           const endTriIdx = Math.min(totalAllBars - 1, Math.max(uP2Idx, lP2Idx, tri.apexIndex));
 
           if (endTriIdx >= chartViewStart && startTriIdx < chartViewEnd) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(margin.left, margin.top, chartW, priceH);
+            ctx.clip();
             const xU1 = getX(uP1Idx);
             const yU1 = getY(tri.upperLine.p1.price);
             const xU2 = getX(uP2Idx);
@@ -1093,8 +1098,8 @@
 
             // 上軌向右虛線延伸至 Apex
             if (tri.apexIndex > curIdx) {
-              const xApex = getX(Math.min(totalAllBars + 15, tri.apexIndex));
-              const apexP = tri.upperLine.p1.price + tri.upperLine.slope * (tri.apexIndex - uP1Idx);
+              const xApex = getX(Math.min(totalAllBars - 1, tri.apexIndex));
+              const apexP = tri.upperLine.p1.price + tri.upperLine.slope * (Math.min(totalAllBars - 1, tri.apexIndex) - uP1Idx);
               const yApex = getY(apexP);
               ctx.beginPath();
               ctx.setLineDash([4, 4]);
@@ -1115,8 +1120,8 @@
 
             // 下軌向右虛線延伸至 Apex
             if (tri.apexIndex > curIdx) {
-              const xApex = getX(Math.min(totalAllBars + 15, tri.apexIndex));
-              const apexP = tri.lowerLine.p1.price + tri.lowerLine.slope * (tri.apexIndex - lP1Idx);
+              const xApex = getX(Math.min(totalAllBars - 1, tri.apexIndex));
+              const apexP = tri.lowerLine.p1.price + tri.lowerLine.slope * (Math.min(totalAllBars - 1, tri.apexIndex) - lP1Idx);
               const yApex = getY(apexP);
               ctx.beginPath();
               ctx.setLineDash([4, 4]);
@@ -1126,6 +1131,8 @@
               ctx.stroke();
               ctx.setLineDash([]);
             }
+
+            ctx.restore();
 
             // 右側價格軸標籤（標註三角形當前上下軌價格）
             ctx.fillStyle = "#f472b6";
@@ -1158,7 +1165,7 @@
             });
 
             // 在三角形上方繪製專屬標題徽章
-            const triBanner = `📐 ${tri.label} (收縮率 +${tri.contractionRatio}% · 現僅差 ${tri.currentSpreadPct}%)`;
+            const triBanner = `📐 ${tri.label} (收縮率 +${tri.contractionRatio}% · 現僅差 ${Number(tri.currentSpreadPct).toFixed(1)}%)`;
             ctx.font = "bold 10px sans-serif";
             const tbMetrics = ctx.measureText(triBanner);
             const tbW = tbMetrics.width + 16;
@@ -1183,7 +1190,7 @@
           const regimesToDraw = [];
 
           // #3 歷史前身盤整
-          if (currentChartData.structure.previousPreviousRegime) {
+          if (!currentChartData.structure.displayPatterns && currentChartData.structure.previousPreviousRegime) {
             regimesToDraw.push({
               r: currentChartData.structure.previousPreviousRegime,
               role: 'HISTORICAL',
@@ -1198,7 +1205,7 @@
           }
 
           // #2 前一盤整基地（例如 UNH 暴跌裂口前的頂部盤整）
-          if (currentChartData.structure.previousRegime) {
+          if (!currentChartData.structure.displayPatterns && currentChartData.structure.previousRegime) {
             regimesToDraw.push({
               r: currentChartData.structure.previousRegime,
               role: 'PREVIOUS',
@@ -1308,6 +1315,43 @@
             }
           });
         }
+      }
+
+      // A second independently confirmed formation is chart context, not another buy signal.
+      for (const pattern of (showChartBox ? currentChartData.structure?.displayPatterns || [] : []).slice(1, 2)) {
+        const start = allPrices.findIndex(bar => bar.date === pattern.startDate);
+        const end = allPrices.findIndex(bar => bar.date === pattern.endDate);
+        if (start < 0 || end < chartViewStart || start >= chartViewEnd) continue;
+        const left = Math.max(margin.left, getX(start));
+        const right = Math.min(margin.left + chartW, getX(end));
+        const priceAt = (side, index) => {
+          const line = pattern.triangle?.[side + 'Line'];
+          return line ? line.p1.price + line.slope * (index - line.p1.index)
+            : side === 'upper' ? pattern.resistance : pattern.support;
+        };
+        const visibleStart = Math.max(start, chartViewStart);
+        const visibleEnd = Math.min(end, chartViewEnd - 1);
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(margin.left, margin.top, chartW, priceH);
+        ctx.clip();
+        ctx.strokeStyle = '#a78bfa';
+        ctx.lineWidth = 1.4;
+        ctx.setLineDash([5, 3]);
+        for (const side of ['upper', 'lower']) {
+          ctx.beginPath();
+          ctx.moveTo(left, getY(priceAt(side, visibleStart)));
+          ctx.lineTo(right, getY(priceAt(side, visibleEnd)));
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#c4b5fd';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(`${pattern.patternLabel}｜${formationStateText(pattern.patternState)}`,
+          left + 4, Math.max(margin.top + 14, getY(priceAt('upper', visibleStart)) - 4));
+        ctx.restore();
       }
 
       // Display references separately; these are never confirmed screening formations.
