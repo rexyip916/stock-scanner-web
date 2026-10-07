@@ -1305,26 +1305,6 @@
                 ctx.fillText(`$${r.support.toFixed(1)}`, boxX2 - 4, ySup + 2);
               }
 
-              // 箱體上方大徽章標題 (Box Identity Banner)
-              const bannerTxt = `【${item.badgeText}】 $${r.support.toFixed(2)} ~ $${r.resistance.toFixed(2)} (${r.duration}日 · 覆蓋率 ${r.coverage}%)`;
-              ctx.font = "bold 10px sans-serif";
-              const bMetrics = ctx.measureText(bannerTxt);
-              const bW = bMetrics.width + 16;
-              const bX = Math.max(margin.left + 8, Math.min(margin.left + chartW - bW - 8, boxX1 + 6));
-              const bY = Math.max(margin.top + 4, yRes - (item.role === 'CURRENT' ? 22 : 20));
-
-              ctx.fillStyle = "rgba(15, 23, 42, 0.94)";
-              ctx.strokeStyle = item.borderCol;
-              ctx.lineWidth = 1;
-              ctx.beginPath();
-              ctx.roundRect(bX, bY, bW, 19, 5);
-              ctx.fill();
-              ctx.stroke();
-
-              ctx.fillStyle = item.resCol;
-              ctx.textAlign = "left";
-              ctx.textBaseline = "middle";
-              ctx.fillText(bannerTxt, bX + 8, bY + 9.5);
             }
           });
         }
