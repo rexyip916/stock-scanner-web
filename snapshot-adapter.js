@@ -22,7 +22,7 @@
   window.__INITIAL_SECTORS__=d.sectors||[];window.__SCAN_HISTORY__=d.history||[];
   window.__INITIAL_TG_TEXT__=snapshot.tg_text||'';window.__INITIAL_SCAN_TIME__=snapshot.scan_time;
   const json=(value,code=200)=>new Response(JSON.stringify(value),{status:code,headers:{'Content-Type':'application/json'}});
-  const ema=(prices,n)=>{let current=0;return prices.map((p,i)=>{current=i<n?current+(p.close-current)/(i+1):p.close*2/(n+1)+current*(1-2/(n+1));return current;});};
+  const ema=(prices,n)=>{let current=0;const alpha=2/(n+1);return prices.map((p,i)=>{current=i===0?p.close:p.close*alpha+current*(1-alpha);return current;});};
   function chartData(symbol){
    const stored=snapshot.charts[symbol];if(!stored?.prices?.length)return null;
    const prices=stored.prices;const structure=stored.structure||{};const box=structure.currentRegime;

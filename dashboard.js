@@ -1365,6 +1365,7 @@
           const globalIdx = chartViewStart + i;
           const bar = allPrices[globalIdx];
           const x = getX(globalIdx);
+          if (!Number.isFinite(bar.volume)) continue;
           const y = getVolY(bar.volume);
           const h = (margin.top + totalH) - y;
           const isUp = bar.close >= bar.open;
@@ -1612,7 +1613,7 @@
         document.getElementById('tt-high').textContent = '$' + bar.high.toFixed(2);
         document.getElementById('tt-low').textContent = '$' + bar.low.toFixed(2);
         document.getElementById('tt-close').textContent = '$' + bar.close.toFixed(2);
-        document.getElementById('tt-vol').textContent = (bar.volume > 1e6 ? (bar.volume / 1e6).toFixed(1) + 'M' : bar.volume.toLocaleString());
+        document.getElementById('tt-vol').textContent = (Number.isFinite(bar.volume) ? (bar.volume > 1e6 ? (bar.volume / 1e6).toFixed(1) + 'M' : bar.volume.toLocaleString()) : '資料缺失');
         
         const chgEl = document.getElementById('tt-change');
         chgEl.textContent = (isUp ? '+' : '') + chgPct.toFixed(2) + '%';
@@ -2162,6 +2163,7 @@
         const bar = visiblePrices[i];
         const gIdx = indexChartViewStart + i;
         const x = getX(gIdx);
+        if (!Number.isFinite(bar.volume)) continue;
         const y = getVolY(bar.volume);
         const h = Math.max(1, baseVolY - y);
         const isUp = bar.close >= bar.open;
@@ -2689,7 +2691,7 @@
         if (ttClose) ttClose.textContent = "$" + bar.close.toLocaleString("en-US", { minimumFractionDigits: 1 });
 
         const ttVol = document.getElementById("idx-tt-vol");
-        if (ttVol) ttVol.textContent = bar.volume > 1e6 ? (bar.volume / 1e6).toFixed(1) + "M" : bar.volume.toLocaleString();
+        if (ttVol) ttVol.textContent = Number.isFinite(bar.volume) ? (bar.volume > 1e6 ? (bar.volume / 1e6).toFixed(1) + "M" : bar.volume.toLocaleString()) : "資料缺失";
 
         const ttChg = document.getElementById("idx-tt-change");
         if (ttChg) {
