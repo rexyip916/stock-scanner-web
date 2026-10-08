@@ -702,12 +702,6 @@
       const p = data.prices && data.prices.length > 0 ? data.prices[data.prices.length - 1].close : 0;
 
       if (!regime || !v) {
-        const pill = document.getElementById('box-verdict-pill');
-        const pillText = document.getElementById('box-verdict-text');
-        if (pill && pillText) {
-          pill.className = "px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-300 font-black text-xs flex items-center gap-1.5 self-start sm:self-auto";
-          pillText.textContent = "未識別到有效箱體或收窄形態";
-        }
         for(const id of ['metric-cov-val','metric-width-val','metric-dur-val','metric-pos-val','regime1-dates','regime1-range','chk-cov-text','chk-width-text','chk-context-text']) { const e=document.getElementById(id); if(e)e.textContent='未有同次箱體資料'; }
         const r2=document.getElementById('regime2-card');if(r2)r2.classList.add('hidden');
         return;
@@ -748,30 +742,6 @@
         if (triPill) triPill.classList.add('hidden');
       }
 
-      const isBottom = v.isBottomCatching || v.contextType === 'BOTTOM_BUILDING';
-      const pill = document.getElementById('box-verdict-pill');
-      const pillText = document.getElementById('box-verdict-text');
-
-      if (pill && pillText) {
-        if (hasTri && regime.triangle) {
-          pill.className = "px-3 py-1.5 rounded-xl bg-pink-500/20 border border-pink-500/50 text-pink-300 border font-black text-xs flex items-center gap-1.5 self-start sm:self-auto";
-          pillText.textContent = `📐 ${regime.triangle.label}｜${formationStateText(regime.patternState)}`;
-        } else if (v.isConsolidationValid) {
-          if (v.boxPositionPct >= 75 && v.boxPositionPct <= 99.5 && p <= regime.resistance) {
-            pill.className = "px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-300 border font-black text-xs flex items-center gap-1.5 self-start sm:self-auto";
-            pillText.textContent = "⚡ 箱頂阻力蓄勢中 (未實體突破 · 觀察臨門一腳)";
-          } else if (regime.patternState==='BREAKOUT_UP') {
-            pill.className = "px-3 py-1.5 rounded-xl bg-sky-500/20 border border-sky-500/50 text-sky-300 border font-black text-xs flex items-center gap-1.5 self-start sm:self-auto";
-            pillText.textContent = "🚀 收盤向上突破已確認";
-          } else {
-            pill.className = `px-3 py-1.5 rounded-xl ${isBottom ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300' : 'bg-sky-500/20 border-sky-500/50 text-sky-300'} border font-black text-xs flex items-center gap-1.5 self-start sm:self-auto`;
-            pillText.textContent = isBottom ? "🛡️ 有效箱體整理" : "⚡ 上升整固箱體成立 (多頭中繼蓄勢)";
-          }
-        } else {
-          pill.className = "px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-300 border font-black text-xs flex items-center gap-1.5 self-start sm:self-auto";
-          pillText.textContent = "⚠️ 箱體邊界正在受考驗 (注意突破或跌破)";
-        }
-      }
 
       // 多箱體層級對照看板 (Multi-Regime Hierarchy)
       const prevR = data.structure?.previousRegime;
