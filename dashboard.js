@@ -714,7 +714,6 @@
       const midItem = document.getElementById('legend-item-mid');
       const supItem = document.getElementById('legend-item-sup');
       const r1Item = document.getElementById('legend-item-r1');
-      const triPill = document.getElementById('legend-triangle-pill');
 
       if (hasTri && regime.triangle) {
         // 三角形形態模式：隱藏水平箱體圖例，顯示三角形專屬圖例
@@ -722,24 +721,18 @@
         if (midItem) midItem.classList.add('hidden');
         if (supItem) supItem.classList.add('hidden');
         if (r1Item) r1Item.classList.add('hidden');
-        if (triPill) {
-          triPill.classList.remove('hidden');
-          triPill.innerHTML = `<span class="w-3 h-0.5 bg-pink-400"></span> <span>📐 ${regime.triangle.label} (收縮率 +${regime.triangle.contractionRatio}%)</span>`;
-        }
       } else if (hasBox) {
         // 標準箱體形態模式：顯示箱體圖例，隱藏三角形圖例
         if (resItem) resItem.classList.remove('hidden');
         if (midItem) midItem.classList.remove('hidden');
         if (supItem) supItem.classList.remove('hidden');
         if (r1Item) r1Item.classList.remove('hidden');
-        if (triPill) triPill.classList.add('hidden');
       } else {
         // 兩者皆無：皆不刻意顯示圖例
         if (resItem) resItem.classList.add('hidden');
         if (midItem) midItem.classList.add('hidden');
         if (supItem) supItem.classList.add('hidden');
         if (r1Item) r1Item.classList.add('hidden');
-        if (triPill) triPill.classList.add('hidden');
       }
 
 
