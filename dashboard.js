@@ -743,6 +743,8 @@
       }
 
 
+      const isBottom = v.isBottomCatching || v.contextType === 'BOTTOM_BUILDING';
+
       // 多箱體層級對照看板 (Multi-Regime Hierarchy)
       const prevR = data.structure?.previousRegime;
       const r1Title = document.getElementById('regime1-title');
