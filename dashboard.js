@@ -2725,19 +2725,7 @@
       closeIndexDrawer();
     }
 
-    function openSentimentEngineModal() {
-      const modal = document.getElementById('sentiment-engine-modal');
-      if (modal) {
-        modal.classList.remove('hidden');
-      }
-    }
 
-    function closeSentimentEngineModal() {
-      const modal = document.getElementById('sentiment-engine-modal');
-      if (modal) {
-        modal.classList.add('hidden');
-      }
-    }
 
     function switchZone03Mode(mode) {
       const gaugeView = document.getElementById('zone03-gauge-view');
@@ -2954,9 +2942,6 @@
       for(const el of document.querySelectorAll('[data-money-source]')) el.textContent=money?.source || '這次掃描未有 Smart / Dumb Money 資料';
     }
 
-    async function refreshSentimentEngine() {
-      await refreshChartSentiment();
-    }
 
     async function refreshChartSentiment() {
       const chartBtn = document.getElementById('btn-chart-sync-sentiment');
