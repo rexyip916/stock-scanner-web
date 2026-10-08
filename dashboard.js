@@ -862,16 +862,21 @@
 
       // 捉底作戰手冊
       const selectedHero=HEROES.find(h=>h.symbol===data.symbol);
-      const stopLoss = selectedHero?.quantile?.stopLoss ?? regime.support * 0.985;
+      const line = regime.triangle?.lowerLine;
+      const lastIndex = data.prices.length - 1;
+      const apex = regime.triangle?.apexIndex;
+      const supportIndex = Number.isFinite(apex) ? Math.min(lastIndex, Math.ceil(apex) - 1) : lastIndex;
+      const support = line ? line.p1.price + line.slope * (supportIndex - line.p1.index) : regime.support;
+      const stopLoss = support * .97;
       const target1 = regime.patternState==='BREAKOUT_UP' ? (selectedHero?.tp1 ?? regime.resistance) : regime.resistance;
-      const risk = Math.max(0.01, p - stopLoss);
-      const reward = Math.max(0.01, target1 - p);
-      const rrRatio = (reward / risk).toFixed(1);
+      const risk = p - stopLoss;
+      const reward = target1 - p;
+      const rrRatio = risk > 0 && reward > 0 ? (reward / risk).toFixed(1) : null;
 
-      setTxt('strat-support', '$' + regime.support.toFixed(2));
+      setTxt('strat-support', '$' + support.toFixed(2));
       setTxt('strat-stoploss', '$' + stopLoss.toFixed(2));
       setTxt('strat-target1', '$' + target1.toFixed(2));
-      setTxt('strat-rr', '1 : ' + rrRatio);
+      setTxt('strat-rr', rrRatio === null ? '—' : '1 : ' + rrRatio);
 
       const stratTag = document.getElementById('box-strategy-tag');
       if (stratTag) {
