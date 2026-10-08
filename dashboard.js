@@ -1104,19 +1104,25 @@
 
             ctx.restore();
 
+            // Use the same latest/apex-capped date as the support and stop cards.
+            const labelIndex = Number.isFinite(tri.apexIndex)
+              ? Math.min(totalAllBars - 1, Math.ceil(tri.apexIndex) - 1) : totalAllBars - 1;
+            const labelUpperP = tri.upperLine.p1.price + tri.upperLine.slope * (labelIndex - uP1Idx);
+            const labelLowerP = tri.lowerLine.p1.price + tri.lowerLine.slope * (labelIndex - lP1Idx);
+            const labelUpperY = getY(labelUpperP), labelLowerY = getY(labelLowerP);
             // 右側價格軸標籤（標註三角形當前上下軌價格）
             ctx.fillStyle = "#f472b6";
-            ctx.fillRect(margin.left + chartW + 2, yCurUpper - 8, 62, 16);
+            ctx.fillRect(margin.left + chartW + 2, labelUpperY - 8, 62, 16);
             ctx.fillStyle = "#020617";
             ctx.font = "bold 9px ui-monospace";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.fillText(`上軌 $${curUpperP.toFixed(1)}`, margin.left + chartW + 33, yCurUpper);
+            ctx.fillText(`上軌 $${labelUpperP.toFixed(1)}`, margin.left + chartW + 33, labelUpperY);
 
             ctx.fillStyle = "#c084fc";
-            ctx.fillRect(margin.left + chartW + 2, yCurLower - 8, 62, 16);
+            ctx.fillRect(margin.left + chartW + 2, labelLowerY - 8, 62, 16);
             ctx.fillStyle = "#020617";
-            ctx.fillText(`下軌 $${curLowerP.toFixed(1)}`, margin.left + chartW + 33, yCurLower);
+            ctx.fillText(`下軌 $${labelLowerP.toFixed(1)}`, margin.left + chartW + 33, labelLowerY);
 
             // 標註關鍵端點圓點
             [
@@ -2007,7 +2013,9 @@
             return line ? line.p1.price + line.slope * (index - line.p1.index)
               : side === 'upper' ? pattern.resistance : pattern.support;
           };
-          return {start, end, reference, secondary: !reference && order > 0,
+          const apex = pattern.triangle?.apexIndex;
+          const referenceIndex = Number.isFinite(apex) ? Math.min(prices.length - 1, Math.ceil(apex) - 1) : prices.length - 1;
+          return {start, end, referenceIndex, reference, secondary: !reference && order > 0,
             triangle: Boolean(pattern.triangle?.isTriangle), valueAt,
             anchors: pattern.triangle ? [pattern.triangle.upperLine.p1, pattern.triangle.upperLine.p2,
               pattern.triangle.lowerLine.p1, pattern.triangle.lowerLine.p2] : [],
@@ -2225,7 +2233,7 @@
           ctx.textBaseline = 'middle';
           for (const [side, color, label] of [['upper', upperColor, pattern.triangle ? '上軌' : '箱頂'],
                                             ['lower', lowerColor, pattern.triangle ? '下軌' : '箱底']]) {
-            const price = pattern.valueAt(side, end);
+            const price = pattern.valueAt(side, pattern.referenceIndex);
             ctx.fillStyle = color;
             ctx.fillText(`${label} $${price.toFixed(1)}`, margin.left + chartW + 4, getY(price));
           }
