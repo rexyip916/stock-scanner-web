@@ -2019,14 +2019,32 @@
     // =========================================================================
 
     // 計算智能技術形態：箱體與三角形
-    // 嚴格落實原則：圖表唔使刻意畫出嚟，有就有，冇就冇，唔需要畫晒兩樣（互斥）
+    // 只讀同次掃描保存的形態，最多兩個正式形態及一個參考區間。
     function computeChartPatterns(prices) {
-      // Render the Bot's saved analysis; no symbol-specific frontend heuristics.
-      const regime=currentIndexChartData?.structure?.currentRegime;
-      if(!regime)return {box:null,triangle:null};
-      const tri=regime.triangle;
-      if(tri?.isTriangle)return {box:null,triangle:{pHigh1:tri.upperLine.p1,pHigh2:tri.upperLine.p2,pLow1:tri.lowerLine.p1,pLow2:tri.lowerLine.p2,apex:{index:tri.apexIndex,price:tri.apexPrice},label:tri.label}};
-      return {triangle:null,box:{startIdx:regime.startIndex,endIdx:regime.endIndex,topPrice:regime.resistance,bottomPrice:regime.support,isBreakout:regime.patternState==='BREAKOUT_UP',label:regime.patternState==='BREAKOUT_UP'?'📦 箱體向上突破':'📦 箱體整理區間',widthPct:regime.rangeWidth.toFixed(1)+'%'}};
+      const structure = currentIndexChartData?.structure || {};
+      const confirmed = Array.isArray(structure.displayPatterns)
+        ? structure.displayPatterns.slice(0, 2)
+        : structure.currentRegime ? [structure.currentRegime] : [];
+      return [...confirmed, ...(structure.referenceRanges || []).slice(0, 1)]
+        .filter(Boolean).map((pattern, order) => {
+          const reference = pattern.patternType === 'REFERENCE_RANGE';
+          const start = Number.isInteger(pattern.startIndex) ? pattern.startIndex
+            : prices.findIndex(bar => bar.date === pattern.startDate);
+          const end = Number.isInteger(pattern.endIndex) ? pattern.endIndex
+            : prices.findIndex(bar => bar.date === pattern.endDate);
+          const valueAt = (side, index) => {
+            const line = pattern.triangle?.[side + 'Line'];
+            return line ? line.p1.price + line.slope * (index - line.p1.index)
+              : side === 'upper' ? pattern.resistance : pattern.support;
+          };
+          return {start, end, reference, secondary: !reference && order > 0,
+            triangle: Boolean(pattern.triangle?.isTriangle), valueAt,
+            anchors: pattern.triangle ? [pattern.triangle.upperLine.p1, pattern.triangle.upperLine.p2,
+              pattern.triangle.lowerLine.p1, pattern.triangle.lowerLine.p2] : [],
+            label: reference ? '參考區間' : `${pattern.patternLabel || '水平箱體'}｜${formationStateText(pattern.patternState)}`};
+        }).filter(item => item.start >= 0 && item.end >= item.start && item.end < prices.length
+          && ['upper', 'lower'].every(side => Number.isFinite(item.valueAt(side, item.start))
+            && Number.isFinite(item.valueAt(side, item.end))));
     }
 
     // 產生高擬真歷史 K 線序列 (用於即時無延遲渲染)
@@ -2110,6 +2128,17 @@
         if (bar.volume > maxVol) maxVol = bar.volume;
       });
 
+      const patterns = computeChartPatterns(allPrices);
+      for (const pattern of patterns) {
+        const start = Math.max(pattern.start, indexChartViewStart);
+        const end = Math.min(pattern.end, indexChartViewEnd - 1);
+        if (end < start) continue;
+        for (const index of [start, end]) {
+          minP = Math.min(minP, pattern.valueAt('lower', index));
+          maxP = Math.max(maxP, pattern.valueAt('upper', index));
+        }
+      }
+
       const pRange = Math.max(1, maxP - minP);
       const paddedMin = minP - pRange * 0.05;
       const paddedMax = maxP + pRange * 0.05;
@@ -2172,193 +2201,74 @@
         ctx.fillRect(x - candleW / 2, y, candleW, h);
       }
 
-      // 3. 計算智能形態 (箱體與收斂三角形)
-      const patterns = computeChartPatterns(allPrices);
-
-      // 4. 繪製箱體形態 (Consolidation Box) - 僅在客觀存在且非三角形時自然繪製
-      if (patterns && patterns.box) {
-        const box = patterns.box;
-        const bStartX = Math.max(margin.left, getX(box.startIdx));
-        const bEndX = Math.min(margin.left + chartW, getX(box.endIdx));
-        const bTopY = getY(box.topPrice);
-        const bBottomY = getY(box.bottomPrice);
-        const bW = Math.max(2, bEndX - bStartX);
-        const bH = Math.max(2, bBottomY - bTopY);
-
+      // Saved formations share the stock chart's two-pattern and reference limits.
+      for (const pattern of patterns) {
+        const start = Math.max(pattern.start, indexChartViewStart);
+        const end = Math.min(pattern.end, indexChartViewEnd - 1);
+        if (end < start) continue;
+        const left = getX(start), right = getX(end);
+        const upperColor = pattern.reference ? '#94a3b8' : pattern.secondary ? '#a78bfa' : '#f59e0b';
+        const lowerColor = pattern.reference ? '#94a3b8' : pattern.secondary ? '#a78bfa' : '#22d3ee';
         ctx.save();
-        // 箱體透明漸層填充
-        const boxGrad = ctx.createLinearGradient(0, bTopY, 0, bBottomY);
-        boxGrad.addColorStop(0, "rgba(245, 158, 11, 0.15)");
-        boxGrad.addColorStop(1, "rgba(245, 158, 11, 0.05)");
-        ctx.fillStyle = boxGrad;
-        ctx.fillRect(bStartX, bTopY, bW, bH);
-
-        // 箱頂阻力線
-        ctx.strokeStyle = "#f59e0b";
-        ctx.lineWidth = 1.8;
-        ctx.setLineDash([5, 3]);
         ctx.beginPath();
-        ctx.moveTo(bStartX, bTopY);
-        ctx.lineTo(bStartX + bW, bTopY);
-        ctx.stroke();
-
-        // 箱底支撐線
-        ctx.strokeStyle = "#38bdf8";
-        ctx.lineWidth = 1.8;
-        ctx.beginPath();
-        ctx.moveTo(bStartX, bBottomY);
-        ctx.lineTo(bStartX + bW, bBottomY);
-        ctx.stroke();
-
-        // 左右邊界虛線
-        ctx.strokeStyle = "rgba(245, 158, 11, 0.35)";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(bStartX, bTopY);
-        ctx.lineTo(bStartX, bBottomY);
-        ctx.moveTo(bStartX + bW, bTopY);
-        ctx.lineTo(bStartX + bW, bBottomY);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // 箱頂標籤
-        const topText = `箱頂阻力 $${box.topPrice.toLocaleString()}`;
-        ctx.font = "bold 9px ui-monospace, SFMono-Regular, monospace";
-        const tw = ctx.measureText(topText).width;
-        ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
-        ctx.fillRect(bStartX + bW - tw - 12, bTopY - 17, tw + 10, 16);
-        ctx.strokeStyle = "#f59e0b";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(bStartX + bW - tw - 12, bTopY - 17, tw + 10, 16);
-        ctx.fillStyle = "#f59e0b";
-        ctx.textAlign = "left";
-        ctx.textBaseline = "middle";
-        ctx.fillText(topText, bStartX + bW - tw - 7, bTopY - 9);
-
-        // 箱底標籤
-        const btmText = `箱底支撐 $${box.bottomPrice.toLocaleString()}`;
-        const bw = ctx.measureText(btmText).width;
-        ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
-        ctx.fillRect(bStartX + bW - bw - 12, bBottomY + 2, bw + 10, 16);
-        ctx.strokeStyle = "#38bdf8";
-        ctx.strokeRect(bStartX + bW - bw - 12, bBottomY + 2, bw + 10, 16);
-        ctx.fillStyle = "#38bdf8";
-        ctx.fillText(btmText, bStartX + bW - bw - 7, bBottomY + 10);
-
-        // 中心形態徽章
-        const centerText = `${box.label} [${box.widthPct}]`;
-        const cw = ctx.measureText(centerText).width;
-        const midX = bStartX + bW / 2;
-        const midY = (bTopY + bBottomY) / 2;
-        ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
-        ctx.strokeStyle = box.isBreakout ? "#10b981" : "#f59e0b";
-        ctx.fillRect(midX - cw / 2 - 8, midY - 9, cw + 16, 18);
-        ctx.strokeRect(midX - cw / 2 - 8, midY - 9, cw + 16, 18);
-        ctx.fillStyle = box.isBreakout ? "#34d399" : "#fbbf24";
-        ctx.fillText(centerText, midX - cw / 2, midY);
-
-        ctx.restore();
-      }
-
-      // 5. 繪製收斂三角形形態 (Triangle Convergence Pattern) - 僅在客觀存在時自然繪製
-      if (patterns && patterns.triangle) {
-        const tri = patterns.triangle;
-        const x1 = getX(tri.pHigh1.index);
-        const y1 = getY(tri.pHigh1.price);
-        const x2 = getX(tri.pHigh2.index);
-        const y2 = getY(tri.pHigh2.price);
-        const x3 = getX(tri.pLow1.index);
-        const y3 = getY(tri.pLow1.price);
-        const x4 = getX(tri.pLow2.index);
-        const y4 = getY(tri.pLow2.price);
-        const xApex = getX(tri.apex.index);
-        const yApex = getY(tri.apex.price);
-
-        ctx.save();
-        // 三角形微光漸層填充
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(xApex, yApex);
-        ctx.lineTo(x3, y3);
-        ctx.closePath();
-        ctx.fillStyle = "rgba(168, 85, 247, 0.11)";
-        ctx.fill();
-
-        // 上方下降壓力趨勢線
-        ctx.strokeStyle = "#c084fc";
-        ctx.lineWidth = 1.8;
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(xApex, yApex);
-        ctx.stroke();
-
-        // 下方上升支撐趨勢線
-        ctx.strokeStyle = "#22d3ee";
-        ctx.lineWidth = 1.8;
-        ctx.beginPath();
-        ctx.moveTo(x3, y3);
-        ctx.lineTo(xApex, yApex);
-        ctx.stroke();
-
-        // 關鍵波段高低錨點
-        [{ x: x1, y: y1 }, { x: x2, y: y2 }].forEach(pt => {
-          ctx.fillStyle = "#c084fc";
+        ctx.rect(margin.left, margin.top, chartW, priceH);
+        ctx.clip();
+        if (!pattern.reference) {
           ctx.beginPath();
-          ctx.arc(pt.x, pt.y, 3.5, 0, Math.PI * 2);
+          ctx.moveTo(left, getY(pattern.valueAt('upper', start)));
+          ctx.lineTo(right, getY(pattern.valueAt('upper', end)));
+          ctx.lineTo(right, getY(pattern.valueAt('lower', end)));
+          ctx.lineTo(left, getY(pattern.valueAt('lower', start)));
+          ctx.closePath();
+          ctx.fillStyle = pattern.secondary ? 'rgba(167,139,250,.06)' : 'rgba(245,158,11,.08)';
           ctx.fill();
-        });
-        [{ x: x3, y: y3 }, { x: x4, y: y4 }].forEach(pt => {
-          ctx.fillStyle = "#22d3ee";
+        }
+        ctx.setLineDash(pattern.reference || pattern.secondary ? [5, 4] : []);
+        ctx.lineWidth = pattern.reference ? 1 : 1.6;
+        for (const [side, color] of [['upper', upperColor], ['lower', lowerColor]]) {
+          ctx.strokeStyle = color;
           ctx.beginPath();
-          ctx.arc(pt.x, pt.y, 3.5, 0, Math.PI * 2);
+          ctx.moveTo(left, getY(pattern.valueAt(side, start)));
+          ctx.lineTo(right, getY(pattern.valueAt(side, end)));
+          ctx.stroke();
+        }
+        for (const point of pattern.anchors) {
+          if (point.index < start || point.index > end) continue;
+          ctx.beginPath();
+          ctx.arc(getX(point.index), getY(point.price), pattern.secondary ? 2.5 : 3.5, 0, Math.PI * 2);
+          ctx.fillStyle = upperColor;
           ctx.fill();
-        });
-
-        // 收斂頂點 (Apex) 標記
-        ctx.fillStyle = "#f59e0b";
-        ctx.beginPath();
-        ctx.arc(xApex, yApex, 4.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.font = "bold 9px ui-monospace, monospace";
-        ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
-        ctx.strokeStyle = "#f59e0b";
-        ctx.lineWidth = 1;
-        ctx.fillRect(xApex - 24, yApex - 20, 48, 16);
-        ctx.strokeRect(xApex - 24, yApex - 20, 48, 16);
-        ctx.fillStyle = "#fbbf24";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("◆ 變盤點", xApex, yApex - 12);
-
-        // 三角形標籤
-        const triLabel = "📐 " + tri.label;
-        const tlw = ctx.measureText(triLabel).width;
-        const tMidX = (x1 + xApex) / 2;
-        const tMidY = (y1 + y3) / 2;
-        ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
-        ctx.strokeStyle = "#c084fc";
-        ctx.fillRect(tMidX - tlw / 2 - 8, tMidY - 9, tlw + 16, 18);
-        ctx.strokeRect(tMidX - tlw / 2 - 8, tMidY - 9, tlw + 16, 18);
-        ctx.fillStyle = "#e9d5ff";
-        ctx.fillText(triLabel, tMidX, tMidY);
-
+        }
+        if (pattern.reference || pattern.secondary) {
+          ctx.setLineDash([]);
+          ctx.fillStyle = upperColor;
+          ctx.font = '10px sans-serif';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(pattern.label, left + 4,
+            Math.max(margin.top + 14, getY(pattern.valueAt('upper', start)) - 4));
+        }
         ctx.restore();
+        if (!pattern.reference && !pattern.secondary) {
+          ctx.font = 'bold 9px ui-monospace';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          for (const [side, color, label] of [['upper', upperColor, pattern.triangle ? '上軌' : '箱頂'],
+                                            ['lower', lowerColor, pattern.triangle ? '下軌' : '箱底']]) {
+            const price = pattern.valueAt(side, end);
+            ctx.fillStyle = color;
+            ctx.fillText(`${label} $${price.toFixed(1)}`, margin.left + chartW + 4, getY(price));
+          }
+        }
       }
-
-      // 更新底部形態圖例（如果有就顯示，如果冇就隱藏，唔需要全部畫晒兩個）
-      const idxBoxLeg = document.getElementById("idx-legend-box");
-      const idxTriLeg = document.getElementById("idx-legend-triangle");
-      if (patterns && patterns.triangle) {
-        if (idxTriLeg) idxTriLeg.classList.remove("hidden");
-        if (idxBoxLeg) idxBoxLeg.classList.add("hidden");
-      } else if (patterns && patterns.box) {
-        if (idxBoxLeg) idxBoxLeg.classList.remove("hidden");
-        if (idxTriLeg) idxTriLeg.classList.add("hidden");
-      } else {
-        if (idxBoxLeg) idxBoxLeg.classList.add("hidden");
-        if (idxTriLeg) idxTriLeg.classList.add("hidden");
-      }
+      const idxBoxLeg = document.getElementById('idx-legend-box');
+      const idxTriLeg = document.getElementById('idx-legend-triangle');
+      if (idxBoxLeg) idxBoxLeg.classList.toggle('hidden', !patterns.some(p => !p.reference && !p.triangle));
+      if (idxTriLeg) idxTriLeg.classList.toggle('hidden', !patterns.some(p => !p.reference && p.triangle));
+      const boxLabel = patterns.find(p => !p.reference && !p.triangle);
+      const triLabel = patterns.find(p => !p.reference && p.triangle);
+      if (boxLabel && idxBoxLeg?.lastChild) idxBoxLeg.lastChild.textContent = ' ' + boxLabel.label;
+      if (triLabel && idxTriLeg?.lastChild) idxTriLeg.lastChild.textContent = ' ' + triLabel.label;
 
       // 6. EMA 50 (金黃色曲線)
       if (currentIndexChartData.ema50 && currentIndexChartData.ema50.length > 0) {
