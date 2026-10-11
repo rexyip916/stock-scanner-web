@@ -579,35 +579,6 @@
 </div>
 </section>
 <!-- ======================================================== -->
-<!-- 4 大核心診斷指標 (核心覆蓋率、波幅寬度、持續天數、現價位置) -->
-<!-- ======================================================== -->
-<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-<!-- 1. 核心覆蓋率 -->
-<div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between space-y-2">
-<span class="text-xs text-slate-300 font-bold">形態覆蓋率 (Coverage)</span>
-<div class="text-2xl font-black text-white font-mono tracking-tight" id="metric-cov-val">--</div>
-<div class="text-[11px] text-slate-400">衡量形成期間收盤價落在箱體／收窄上下軌內的比例</div>
-</div>
-<!-- 2. 箱體波幅寬度 -->
-<div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between space-y-2">
-<span class="text-xs text-slate-300 font-bold">形態末端波幅 (Width)</span>
-<div class="text-2xl font-black text-white font-mono tracking-tight" id="metric-width-val">--</div>
-<div class="text-[11px] text-slate-400">箱體或收窄形態末端上下軌的價差比例</div>
-</div>
-<!-- 3. 橫盤持續天數 -->
-<div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between space-y-2">
-<span class="text-xs text-slate-300 font-bold">形態持續天數 (Duration)</span>
-<div class="text-2xl font-black text-white font-mono tracking-tight" id="metric-dur-val">-- 日</div>
-<div class="text-[11px] text-slate-400">有效價格形態包含的交易日數</div>
-</div>
-<!-- 4. 現價在形態內位置 -->
-<div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between space-y-2">
-<span class="text-xs text-slate-300 font-bold">現價在形態內位置</span>
-<div class="text-2xl font-black text-amber-400 font-mono tracking-tight" id="metric-pos-val">--</div>
-<div class="text-[11px] text-slate-400">相對形成期末端上下軌的位置；突破後可能高於100%</div>
-</div>
-</div>
-<!-- ======================================================== -->
 <!-- 形態支持／阻力參考 -->
 <!-- ======================================================== -->
 <div class="bg-slate-900/80 border border-amber-500/30 rounded-2xl p-4 sm:p-5 shadow-xl space-y-3.5">
@@ -634,6 +605,35 @@
 <div class="text-xs text-slate-400">預期盈虧比 (R:R)</div>
 <div class="text-base sm:text-lg font-bold text-sky-400 font-mono mt-1" id="strat-rr">1 : 0.0</div>
 </div>
+</div>
+</div>
+<!-- ======================================================== -->
+<!-- 4 大核心診斷指標 (核心覆蓋率、波幅寬度、持續天數、現價位置) -->
+<!-- ======================================================== -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+<!-- 1. 核心覆蓋率 -->
+<div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between space-y-2">
+<span class="text-xs text-slate-300 font-bold">形態覆蓋率 (Coverage)</span>
+<div class="text-2xl font-black text-white font-mono tracking-tight" id="metric-cov-val">--</div>
+<div class="text-[11px] text-slate-400">衡量形成期間收盤價落在箱體／收窄上下軌內的比例</div>
+</div>
+<!-- 2. 箱體波幅寬度 -->
+<div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between space-y-2">
+<span class="text-xs text-slate-300 font-bold">形態末端波幅 (Width)</span>
+<div class="text-2xl font-black text-white font-mono tracking-tight" id="metric-width-val">--</div>
+<div class="text-[11px] text-slate-400">箱體或收窄形態末端上下軌的價差比例</div>
+</div>
+<!-- 3. 橫盤持續天數 -->
+<div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between space-y-2">
+<span class="text-xs text-slate-300 font-bold">形態持續天數 (Duration)</span>
+<div class="text-2xl font-black text-white font-mono tracking-tight" id="metric-dur-val">-- 日</div>
+<div class="text-[11px] text-slate-400">有效價格形態包含的交易日數</div>
+</div>
+<!-- 4. 現價在形態內位置 -->
+<div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between space-y-2">
+<span class="text-xs text-slate-300 font-bold">現價在形態內位置</span>
+<div class="text-2xl font-black text-amber-400 font-mono tracking-tight" id="metric-pos-val">--</div>
+<div class="text-[11px] text-slate-400">相對形成期末端上下軌的位置；突破後可能高於100%</div>
 </div>
 </div>
 <div class="p-3.5 bg-slate-900/60 rounded-2xl border border-slate-800 flex items-center justify-between text-xs">

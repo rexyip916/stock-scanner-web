@@ -337,9 +337,12 @@
       return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
     }
     function formationStateText(state) {
-      return ({COILING:'形態內整理',BREAKOUT_UP:'向上突破已確認',BREAKDOWN:'下軌跌破',FAILED_BREAKOUT:'突破失敗／回落'})[state] || '歷史形態';
+      return ({COILING:'形態內整理',BREAKOUT_UP:'向上突破已確認',BREAKDOWN:'下軌跌破',FAILED_BREAKOUT:'曾突破後回落'})[state] || '歷史形態';
     }
     function formationDisplayLabel(pattern) {
+      if (pattern.displayRole === 'CONTEXT') {
+        return pattern.triangle ? `歷史${pattern.patternLabel || '收窄形態'}` : '歷史箱體';
+      }
       if (pattern.displayRole === 'NESTED' || pattern.signalScope === 'NESTED') {
         return pattern.triangle ? `箱內${pattern.patternLabel}` : '近期細箱';
       }
