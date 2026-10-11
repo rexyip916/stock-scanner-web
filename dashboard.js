@@ -372,20 +372,27 @@
       card.className = "bg-slate-950/90 rounded-3xl border transition duration-300 hover:-translate-y-1.5 cursor-pointer p-4 sm:p-5 flex flex-col justify-between space-y-3 relative overflow-hidden shadow-xl " + themeBorder;
 
       const reboundDays = hero.bottom_rebound_days;
+      const boxBase = hero.signal_scope==='NESTED' ? '細箱底' : hero.signal_scope==='PRIMARY' ? '主箱底' : '箱底';
       const reboundText = Number.isInteger(reboundDays) && reboundDays > 0
-        ? `箱底反彈第 ${reboundDays} 個交易日`
-        : reboundDays === 0 ? '未確認箱底反彈' : '未有反彈日數資料';
+        ? `${boxBase}反彈第 ${reboundDays} 日`
+        : reboundDays === 0 ? `未確認${boxBase}反彈` : '未有反彈日數資料';
       const patternLabel=marketContextText(hero.signal_scope==='NESTED'
         ? hero.pattern_type==='BOX' ? '近期細箱' : `箱內${hero.pattern_label || '收窄形態'}`
         : hero.signal_scope==='PRIMARY' && hero.pattern_type==='BOX' ? '主要箱體' : hero.pattern_label || '水平箱體');
-      const patternCaption=hero.category==='early'
-        ? `🚀 ${patternLabel}突破第 ${hero.age} 個交易日${hero.volume_breakout ? '｜🔥 放量突破' : ''}`
-        : hero.pattern_type && hero.pattern_type!=='BOX'
-          ? `📐 ${patternLabel}｜形態 ${String(hero.box_duration || '—').replace(/天$/, '')} 個交易日`
-          : `🛡️ ${patternLabel} ${hero.box_duration ? String(hero.box_duration).replace(/天$/, '') + ' 個交易日' : '長度未有資料'}｜${reboundText}${hero.volume_rebound ? '｜🔥 放量反彈' : ''}`;
-      const posBadge = hero.category === 'early' 
-        ? `<span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[10px] font-bold font-mono shrink-0">${patternCaption}</span>`
-        : `<span class="px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/30 text-[10px] font-bold font-mono shrink-0">${patternCaption}</span>`;
+      const durationText=marketContextText(hero.box_duration ? String(hero.box_duration).replace(/天$/, '') + ' 個交易日' : '長度未有資料');
+      const firstLine=hero.category==='early'
+        ? `🚀 ${patternLabel} · 突破第 ${marketContextText(hero.age)} 日`
+        : `${hero.pattern_type && hero.pattern_type!=='BOX' ? '📐' : '🛡️'} ${patternLabel} · ${durationText}`;
+      const secondLine=hero.category==='early' ? '收市突破已確認'
+        : hero.pattern_type && hero.pattern_type!=='BOX' ? '形態內整理' : reboundText;
+      const volumeText=hero.category==='early' && hero.volume_breakout ? '🔥 放量突破'
+        : hero.category!=='early' && hero.volume_rebound ? '🔥 放量反彈' : '';
+      const badgeColor=hero.category==='early' ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+        : 'bg-sky-500/10 text-sky-300 border-sky-500/30';
+      const posBadge=`<div class="px-2 py-1 rounded border text-[10px] font-bold font-mono ${badgeColor}" style="width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.6">
+        <div>${firstLine}</div>
+        <div style="display:flex;flex-wrap:wrap;column-gap:0.75em"><span>${secondLine}</span>${volumeText ? `<span>${volumeText}</span>` : ''}</div>
+      </div>`;
 
       const ir = hero.index_resonance;
       let indexStatusBadge = '';
@@ -404,10 +411,6 @@
                 <span>${hero.symbol}</span>
                 <span class="text-xs text-slate-400 font-medium">${hero.role ? hero.role.split(' ')[0] + ' ' : ''}${hero.sector}</span>
               </div>
-              <div class="mt-1.5 flex items-center gap-1.5 flex-wrap">
-                ${posBadge}
-                ${indexStatusBadge}
-              </div>
             </div>
           </div>
 
@@ -416,6 +419,11 @@
               ${hero.change >= 0 ? '+' : ''}${hero.change.toFixed(2)}%
             </div>
           </div>
+        </div>
+
+        <div style="width:100%;min-width:0">
+          ${posBadge}
+          ${indexStatusBadge ? `<div class="mt-1.5" style="min-width:0;overflow-wrap:anywhere">${indexStatusBadge}</div>` : ''}
         </div>
 
         <!-- 視覺化能量成交量槽 -->
