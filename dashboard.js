@@ -359,6 +359,7 @@
     }
     // 產生單張英雄戰牌 DOM
     function buildHeroCard(hero) {
+      const volumeBarPct = Number.isFinite(hero.vol_ratio) ? Math.min(100, Math.max(0, hero.vol_ratio / 3 * 100)) : 0;
       const isSSR = hero.tier === 'SSR';
       const isBottom = hero.category === 'bottom';
       const card = document.createElement('div');
@@ -429,13 +430,13 @@
           ${indexStatusBadge ? `<div class="mt-1.5" style="min-width:0;overflow-wrap:anywhere">${indexStatusBadge}</div>` : ''}
         </div>
 
-        <!-- 視覺化能量成交量槽 -->
+        <!-- 成交量倍數：所有卡片統一以 3X 為滿格 -->
         <div class="space-y-1.5 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
           <div class="flex justify-between items-center text-[11px] font-bold">
             <span class="text-slate-300">⚡成交量 <strong class="text-white mono-num">${Number.isFinite(hero.vol_ratio) ? hero.vol_ratio.toFixed(2) + 'X' : '—'}</strong></span>
           </div>
           <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-            <div class="mana-bar-fill h-full rounded-full transition-all duration-500" style="width: ${hero.mana_pct}%"></div>
+            <div class="mana-bar-fill h-full rounded-full transition-all duration-500" style="width: ${volumeBarPct}%"></div>
           </div>
         </div>
       `;
