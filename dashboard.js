@@ -339,6 +339,15 @@
     function formationStateText(state) {
       return ({COILING:'形態內整理',BREAKOUT_UP:'向上突破已確認',BREAKDOWN:'下軌跌破',FAILED_BREAKOUT:'突破失敗／回落'})[state] || '歷史形態';
     }
+    function formationDisplayLabel(pattern) {
+      if (pattern.displayRole === 'NESTED' || pattern.signalScope === 'NESTED') {
+        return pattern.triangle ? `箱內${pattern.patternLabel}` : '近期細箱';
+      }
+      if (pattern.displayRole === 'PRIMARY' && !pattern.triangle) {
+        return pattern.rangeClass === 'WIDE' ? '主要箱體（寬幅橫行）' : '主要箱體';
+      }
+      return pattern.patternLabel || '水平箱體';
+    }
     function marketContextStyle(status) {
       if(status === 'warning') return {color:'#fb7185',icon:'⚠️'};
       if(status === 'bullish') return {color:'#34d399',icon:'🟢'};
@@ -366,12 +375,14 @@
       const reboundText = Number.isInteger(reboundDays) && reboundDays > 0
         ? `箱底反彈第 ${reboundDays} 個交易日`
         : reboundDays === 0 ? '未確認箱底反彈' : '未有反彈日數資料';
-      const patternLabel=marketContextText(hero.pattern_label || '水平箱體');
+      const patternLabel=marketContextText(hero.signal_scope==='NESTED'
+        ? hero.pattern_type==='BOX' ? '近期細箱' : `箱內${hero.pattern_label || '收窄形態'}`
+        : hero.signal_scope==='PRIMARY' && hero.pattern_type==='BOX' ? '主要箱體' : hero.pattern_label || '水平箱體');
       const patternCaption=hero.category==='early'
         ? `🚀 ${patternLabel}突破第 ${hero.age} 個交易日${hero.volume_breakout ? '｜🔥 放量突破' : ''}`
         : hero.pattern_type && hero.pattern_type!=='BOX'
           ? `📐 ${patternLabel}｜形態 ${String(hero.box_duration || '—').replace(/天$/, '')} 個交易日`
-          : `🛡️ 箱體 ${hero.box_duration ? String(hero.box_duration).replace(/天$/, '') + ' 個交易日' : '長度未有資料'}｜${reboundText}${hero.volume_rebound ? '｜🔥 放量反彈' : ''}`;
+          : `🛡️ ${patternLabel} ${hero.box_duration ? String(hero.box_duration).replace(/天$/, '') + ' 個交易日' : '長度未有資料'}｜${reboundText}${hero.volume_rebound ? '｜🔥 放量反彈' : ''}`;
       const posBadge = hero.category === 'early' 
         ? `<span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[10px] font-bold font-mono shrink-0">${patternCaption}</span>`
         : `<span class="px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/30 text-[10px] font-bold font-mono shrink-0">${patternCaption}</span>`;
@@ -698,7 +709,7 @@
     // 更新箱體驗證與診斷面板 (回答使用者的核心目的：箱體畫得正唔正確)
     function updateBoxValidationUI(data) {
       const v = data.validation;
-      const regime = data.structure?.currentRegime;
+      const regime = data.structure?.primaryRegime || data.structure?.currentRegime;
       const p = data.prices && data.prices.length > 0 ? data.prices[data.prices.length - 1].close : 0;
 
       if (!regime || !v) {
@@ -739,7 +750,7 @@
       const isBottom = v.isBottomCatching || v.contextType === 'BOTTOM_BUILDING';
 
       // 多箱體層級對照看板 (Multi-Regime Hierarchy)
-      const prevR = data.structure?.previousRegime;
+      const prevR = data.structure?.nestedRegime || data.structure?.previousRegime;
       const r1Title = document.getElementById('regime1-title');
       const r1Dates = document.getElementById('regime1-dates');
       const r1Range = document.getElementById('regime1-range');
@@ -759,9 +770,9 @@
           r1Tag.textContent = regime.patternState==='BREAKOUT_UP'?'向上突破':(regime.context?.label || '形態內整理');
           r1Tag.className = 'text-[10px] px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300 font-bold';
         } else {
-          if (r1Title) r1Title.innerHTML = `<span>📦</span> #1 最新盤整基地`;
+          if (r1Title) r1Title.textContent = `📦 #1 ${formationDisplayLabel(regime)}`;
           r1Range.textContent = `$${regime.support.toFixed(2)} ～ $${regime.resistance.toFixed(2)}`;
-          r1Tag.textContent = regime.context?.label || '最新主導';
+          r1Tag.textContent = regime.rangeClass==='WIDE' ? '寬幅橫行・非窄幅篩選' : regime.context?.label || '最新主導';
           r1Tag.className = 'text-[10px] px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold';
         }
       }
@@ -827,25 +838,31 @@
 
       // 捉底作戰手冊
       const selectedHero=HEROES.find(h=>h.symbol===data.symbol);
-      const line = regime.triangle?.lowerLine;
+      const signalRegime = data.structure?.currentRegime;
+      const strategyRegime = signalRegime || regime;
+      const line = strategyRegime.triangle?.lowerLine;
       const lastIndex = data.prices.length - 1;
-      const apex = regime.triangle?.apexIndex;
+      const apex = strategyRegime.triangle?.apexIndex;
       const supportIndex = Number.isFinite(apex) ? Math.min(lastIndex, Math.ceil(apex) - 1) : lastIndex;
-      const support = line ? line.p1.price + line.slope * (supportIndex - line.p1.index) : regime.support;
+      const support = line ? line.p1.price + line.slope * (supportIndex - line.p1.index) : strategyRegime.support;
       const stopLoss = support * .97;
-      const target1 = regime.patternState==='BREAKOUT_UP' ? (selectedHero?.tp1 ?? regime.resistance) : regime.resistance;
+      const target1 = strategyRegime.patternState==='BREAKOUT_UP' ? (selectedHero?.tp1 ?? strategyRegime.resistance) : strategyRegime.resistance;
       const risk = p - stopLoss;
       const reward = target1 - p;
       const rrRatio = risk > 0 && reward > 0 ? (reward / risk).toFixed(1) : null;
 
-      setTxt('strat-support', '$' + support.toFixed(2));
-      setTxt('strat-stoploss', '$' + stopLoss.toFixed(2));
-      setTxt('strat-target1', '$' + target1.toFixed(2));
-      setTxt('strat-rr', rrRatio === null ? '—' : '1 : ' + rrRatio);
+      setTxt('strat-support', signalRegime ? '$' + support.toFixed(2) : '—');
+      setTxt('strat-stoploss', signalRegime ? '$' + stopLoss.toFixed(2) : '—');
+      setTxt('strat-target1', signalRegime ? '$' + target1.toFixed(2) : '—');
+      setTxt('strat-rr', !signalRegime || rrRatio === null ? '—' : '1 : ' + rrRatio);
 
       const stratTag = document.getElementById('box-strategy-tag');
       if (stratTag) {
-        if (regime.triangle && regime.triangle.isTriangle) {
+        if (!signalRegime) {
+          stratTag.textContent = '主要範圍觀察・未有窄幅篩選訊號';
+        } else if (signalRegime.signalScope==='NESTED') {
+          stratTag.textContent = `近期細箱／箱內形態・${formationStateText(signalRegime.patternState)}`;
+        } else if (strategyRegime.triangle && strategyRegime.triangle.isTriangle) {
           stratTag.textContent = '📐 三角形末端變盤';
           stratTag.className = 'px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 font-bold text-[10px]';
         } else {
@@ -855,6 +872,12 @@
       }
 
       let finalTactical = v.tacticalAdvice || v.reason;
+      if (data.structure?.primaryRegime) {
+        finalTactical = signalRegime?.signalScope==='NESTED'
+          ? `篩選及防守參考近期細箱／箱內形態；上方主要阻力 $${regime.resistance.toFixed(2)} 仍須分開確認。`
+          : !signalRegime ? '主要箱體只作結構觀察，未有符合窄幅條件的篩選形態。'
+          : `篩選及防守參考${formationDisplayLabel(strategyRegime)}；${formationStateText(strategyRegime.patternState)}。`;
+      }
       if (regime.triangle && regime.triangle.isTriangle) {
         finalTactical = `【📐 ${formationStateText(regime.patternState)}】${regime.triangle.description} ${regime.patternState==='BREAKOUT_UP'?'收盤已突破上軌，留意回踩及突破失敗風險。':'留意收盤突破上軌或跌穿下軌，不能單憑形態名稱推斷方向。'}`;
       }
@@ -913,7 +936,7 @@
         badgeRange.textContent = `${visiblePrices[0].date} ~ ${visiblePrices[visibleBars - 1].date} (${visibleBars}/${totalAllBars} 日${isZoomed ? ' · 縮放中' : ''})`;
       }
 
-      const regime = currentChartData.structure?.currentRegime;
+      const regime = currentChartData.structure?.primaryRegime || currentChartData.structure?.currentRegime;
 
       // 邊界設定
       const margin = { top: 28, right: 68, bottom: 25, left: 14 };
@@ -1171,7 +1194,7 @@
               bgGrad1: 'rgba(168, 85, 247, 0.05)',
               resCol: '#c084fc',
               supCol: '#a855f7',
-              dash: [5, 3]
+              dash: regime.displayRole==='PRIMARY' ? [] : [5, 3]
             });
           }
 
@@ -1251,12 +1274,12 @@
                 ctx.font = "bold 9px ui-monospace";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
-                ctx.fillText(`箱頂 $${r.resistance.toFixed(1)}`, margin.left + chartW + 33, yRes);
+                ctx.fillText(`${r.displayRole==='PRIMARY' ? '主箱頂' : '箱頂'} $${r.resistance.toFixed(1)}`, margin.left + chartW + 33, yRes);
 
                 ctx.fillStyle = "#10b981";
                 ctx.fillRect(margin.left + chartW + 2, ySup - 8, 62, 16);
                 ctx.fillStyle = "#020617";
-                ctx.fillText(`箱底 $${r.support.toFixed(1)}`, margin.left + chartW + 33, ySup);
+                ctx.fillText(`${r.displayRole==='PRIMARY' ? '主箱底' : '箱底'} $${r.support.toFixed(1)}`, margin.left + chartW + 33, ySup);
               } else {
                 // 歷史箱體右側小標籤
                 ctx.fillStyle = item.borderCol;
@@ -1291,7 +1314,7 @@
         ctx.beginPath();
         ctx.rect(margin.left, margin.top, chartW, priceH);
         ctx.clip();
-        ctx.strokeStyle = '#a78bfa';
+        ctx.strokeStyle = pattern.displayRole==='NESTED' ? '#94a3b8' : '#a78bfa';
         ctx.lineWidth = 1.4;
         ctx.setLineDash([5, 3]);
         for (const side of ['upper', 'lower']) {
@@ -1301,11 +1324,11 @@
           ctx.stroke();
         }
         ctx.setLineDash([]);
-        ctx.fillStyle = '#c4b5fd';
+        ctx.fillStyle = pattern.displayRole==='NESTED' ? '#cbd5e1' : '#c4b5fd';
         ctx.font = '10px sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'bottom';
-        ctx.fillText(`${pattern.patternLabel}｜${formationStateText(pattern.patternState)}`,
+        ctx.fillText(`${formationDisplayLabel(pattern)}｜${formationStateText(pattern.patternState)}`,
           left + 4, Math.max(margin.top + 14, getY(priceAt('upper', visibleStart)) - 4));
         ctx.restore();
       }
@@ -2019,7 +2042,7 @@
             triangle: Boolean(pattern.triangle?.isTriangle), valueAt,
             anchors: pattern.triangle ? [pattern.triangle.upperLine.p1, pattern.triangle.upperLine.p2,
               pattern.triangle.lowerLine.p1, pattern.triangle.lowerLine.p2] : [],
-            label: reference ? '參考區間' : `${pattern.patternLabel || '水平箱體'}｜${formationStateText(pattern.patternState)}`};
+            label: reference ? '參考區間' : `${formationDisplayLabel(pattern)}｜${formationStateText(pattern.patternState)}`};
         }).filter(item => item.start >= 0 && item.end >= item.start && item.end < prices.length
           && ['upper', 'lower'].every(side => Number.isFinite(item.valueAt(side, item.start))
             && Number.isFinite(item.valueAt(side, item.end))));
@@ -2039,8 +2062,8 @@
         const res = await fetch(`/api/stock-chart?symbol=${encodeURIComponent(idx.quoteSymbol)}`);
         if (!res.ok) throw Error('這次掃描未有此指數真實圖表');
         const data = await res.json();
-        const savedRegime=data.structure?.currentRegime;
-        note.textContent=[idx.chartNote,savedRegime ? `${savedRegime.patternLabel || savedRegime.name}｜${formationStateText(savedRegime.patternState)}` : '未識別到有效箱體或收窄形態'].filter(Boolean).join(' ');
+        const savedRegime=data.structure?.primaryRegime || data.structure?.currentRegime;
+        note.textContent=[idx.chartNote,savedRegime ? `${formationDisplayLabel(savedRegime)}｜${formationStateText(savedRegime.patternState)}` : '未識別到有效箱體或收窄形態'].filter(Boolean).join(' ');
         note.hidden=false;
         currentIndexChartData = {symbol: idx.code, name: idx.name, prices: data.prices, ema50: data.ema50, ema200: data.ema200, structure:data.structure};
         indexChartViewStart = 0; indexChartViewEnd = data.prices.length; hoveredIndexCandleIndex = -1;
@@ -3406,4 +3429,3 @@
     } catch (e) {
       console.warn("URL params parsing error", e);
     }
-  

@@ -25,7 +25,7 @@
   const ema=(prices,n)=>{let current=0;const alpha=2/(n+1);return prices.map((p,i)=>{current=i===0?p.close:p.close*alpha+current*(1-alpha);return current;});};
   function chartData(symbol){
    const stored=snapshot.charts[symbol];if(!stored?.prices?.length)return null;
-   const prices=stored.prices;const structure=stored.structure||{};const box=structure.currentRegime;
+   const prices=stored.prices;const structure=stored.structure||{};const box=structure.primaryRegime||structure.currentRegime;
    let validation=null;
    if(box){const bars=prices.slice(box.startIndex,box.endIndex+1);const tri=box.triangle;const coverage=bars.length?bars.filter((p,j)=>{const i=box.startIndex+j;const lo=tri?tri.lowerLine.p1.price+tri.lowerLine.slope*(i-tri.lowerLine.p1.index):box.support;const hi=tri?tri.upperLine.p1.price+tri.upperLine.slope*(i-tri.upperLine.p1.index):box.resistance;return p.close>=lo&&p.close<=hi;}).length/bars.length*100:0;const pos=(prices.at(-1).close-box.support)/(box.resistance-box.support||1)*100;const ctx=box.context||{};
     validation={isConsolidationValid:true,durationDays:box.duration,coveragePct:coverage,rangeWidthPct:box.rangeWidth??(box.resistance-box.support)/((box.resistance+box.support)/2)*100,support:box.support,resistance:box.resistance,mid:(box.support+box.resistance)/2,currentPrice:prices.at(-1).close,boxPositionPct:pos,contextType:ctx.type||'NEUTRAL',contextLabel:ctx.label||'橫行盤整',isBottomCatching:ctx.type==='BOTTOM_BUILDING',precedingDropPct:ctx.precedingDropPct||0,positionVsMA200:ctx.positionVsMA200,reason:ctx.reason||'掃描時保存的結構分析',tacticalAdvice:ctx.reason||'以同次掃描支持／阻力與止蝕資料核對。'};
