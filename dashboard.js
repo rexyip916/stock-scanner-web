@@ -1513,6 +1513,42 @@
       }
     }
 
+    // Touch handling is confined to the chart; page scrolling outside stays native.
+    function bindChartTouch(container, options) {
+      container.style.touchAction = 'none';
+      let pinch = null;
+      const distance = touches => Math.hypot(touches[1].clientX - touches[0].clientX, touches[1].clientY - touches[0].clientY);
+      function begin(e) {
+        pinch = null;
+        options.end();
+        if (e.touches.length >= 2) {
+          pinch = { distance: distance(e.touches), range: options.range() };
+        } else if (e.touches.length === 1) {
+          options.start(e.touches[0]);
+        }
+      }
+      container.addEventListener('touchstart', begin, { passive: true });
+      container.addEventListener('touchmove', e => {
+        if (!e.touches.length) return;
+        e.preventDefault();
+        if (e.touches.length >= 2) {
+          if (!pinch) begin(e);
+          const d = distance(e.touches);
+          if (!pinch.distance || !d) return;
+          const { rect, chartW } = options.metrics();
+          const middleX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+          const center = Math.max(0, Math.min(1, (middleX - rect.left - 14) / Math.max(1, chartW)));
+          options.restore(pinch.range);
+          options.zoom(d / pinch.distance, center);
+        } else {
+          if (pinch) begin(e);
+          options.move(e);
+        }
+      }, { passive: false });
+      container.addEventListener('touchend', begin, { passive: true });
+      container.addEventListener('touchcancel', () => { pinch = null; options.end(); }, { passive: true });
+    }
+
     // 綁定畫布滑鼠滾輪縮放、按住拖曳平移、以及懸停十字準星 (Pan, Zoom & Crosshair)
     (function setupChartInteractions() {
       const canvas = document.getElementById('hero-stock-canvas');
@@ -1673,23 +1709,24 @@
       container.addEventListener('mousemove', handleMove);
       container.addEventListener('mouseleave', handleLeave);
 
-      // 觸控裝置手勢平移支援
-      container.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 1) {
+      bindChartTouch(container, {
+        metrics: getChartMetrics, zoom: zoomHeroChart,
+        range: () => [chartViewStart, chartViewEnd],
+        restore: range => { [chartViewStart, chartViewEnd] = range; },
+        start: touch => {
           isChartDragging = true;
-          dragStartX = e.touches[0].clientX;
+          dragStartX = touch.clientX;
           dragStartViewStart = chartViewStart;
           dragStartViewEnd = chartViewEnd;
           tooltip.classList.add('hidden');
+        },
+        move: handleMove,
+        end: () => {
+          isChartDragging = false;
+          hoveredCandleIndex = -1;
+          tooltip.classList.add('hidden');
+          renderHeroStockCanvas();
         }
-      }, { passive: true });
-
-      container.addEventListener('touchmove', handleMove, { passive: true });
-      container.addEventListener('touchend', () => {
-        isChartDragging = false;
-        hoveredCandleIndex = -1;
-        tooltip.classList.add('hidden');
-        renderHeroStockCanvas();
       });
 
       window.addEventListener('resize', () => {
@@ -2645,23 +2682,24 @@
       container.addEventListener("mousemove", handleMove);
       container.addEventListener("mouseleave", handleLeave);
 
-      // 觸控裝置手勢平移支援
-      container.addEventListener("touchstart", (e) => {
-        if (e.touches.length === 1) {
+      bindChartTouch(container, {
+        metrics: getMetrics, zoom: zoomIndexChart,
+        range: () => [indexChartViewStart, indexChartViewEnd],
+        restore: range => { [indexChartViewStart, indexChartViewEnd] = range; },
+        start: touch => {
           isIndexChartDragging = true;
-          indexDragStartX = e.touches[0].clientX;
+          indexDragStartX = touch.clientX;
           indexDragStartViewStart = indexChartViewStart;
           indexDragStartViewEnd = indexChartViewEnd;
-          tooltip.classList.add("hidden");
+          tooltip.classList.add('hidden');
+        },
+        move: handleMove,
+        end: () => {
+          isIndexChartDragging = false;
+          hoveredIndexCandleIndex = -1;
+          tooltip.classList.add('hidden');
+          renderIndexChartCanvas();
         }
-      }, { passive: true });
-
-      container.addEventListener("touchmove", handleMove, { passive: true });
-      container.addEventListener("touchend", () => {
-        isIndexChartDragging = false;
-        hoveredIndexCandleIndex = -1;
-        tooltip.classList.add("hidden");
-        renderIndexChartCanvas();
       });
 
       window.addEventListener("resize", () => {
