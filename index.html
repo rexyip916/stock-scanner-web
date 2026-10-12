@@ -430,7 +430,7 @@
 <div class="mt-3 pt-2.5 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-slate-400 gap-1.5">
 <div class="flex items-center gap-1.5" id="filter-mode-hint">
 <span>💡</span>
-<span>點擊卡片即可精準過濾下方 05（築底）與 06（突破）股票；再次點擊已選卡片可反選還原。</span>
+<span>點擊卡片即可精準過濾下方 05（整理）、06（突破）與 07（回踩）股票；再次點擊已選卡片可反選還原。</span>
 </div>
 </div>
 </section>
@@ -481,6 +481,31 @@
 </div>
 <!-- 升勢英雄卡片網格 -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="early-heroes-grid">
+<!-- 由 JS 動態生成 -->
+</div>
+</section>
+<!-- Fixed breakout event retest tracking; same card and drawer layout -->
+<section class="bg-gradient-to-b from-amber-950/20 via-slate-900/80 to-slate-900/90 border-2 border-amber-500/30 rounded-3xl p-5 sm:p-6 shadow-2xl relative overflow-hidden backdrop-blur-sm ring-1 ring-amber-500/20">
+<div class="absolute top-0 left-0 w-32 h-1.5 bg-gradient-to-r from-amber-400 to-rose-500"></div>
+<div class="flex items-center justify-between mb-4 pb-2 border-b border-amber-500/20">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center text-xl font-black shadow-inner">
+            🔁
+          </div>
+<div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black tracking-widest font-mono">
+                ZONE 07
+              </span>
+<h2 class="text-sm sm:text-base font-black text-white tracking-wide">
+                突破回踩追蹤
+              </h2>
+</div>
+</div>
+</div>
+</div>
+<!-- 升勢英雄卡片網格 -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="retest-heroes-grid">
 <!-- 由 JS 動態生成 -->
 </div>
 </section>
@@ -590,15 +615,15 @@
 <!-- 4 大數值區塊 (箱底防守、破位止損、箱頂目標、預期盈虧比) -->
 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
 <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl">
-<div class="text-xs text-slate-400">下軌支持 (Support)</div>
+<div class="text-xs text-slate-400" id="strat-support-label">下軌支持 (Support)</div>
 <div class="text-base sm:text-lg font-bold text-emerald-400 font-mono mt-1" id="strat-support">$0.00</div>
 </div>
 <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl">
-<div class="text-xs text-slate-400">破位止損 (Stop Loss)</div>
+<div class="text-xs text-slate-400" id="strat-stop-label">破位止損 (Stop Loss)</div>
 <div class="text-base sm:text-lg font-bold text-rose-400 font-mono mt-1" id="strat-stoploss">$0.00</div>
 </div>
 <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl">
-<div class="text-xs text-slate-400">目標參考 (Target 1)</div>
+<div class="text-xs text-slate-400" id="strat-target-label">目標參考 (Target 1)</div>
 <div class="text-base sm:text-lg font-bold text-amber-300 font-mono mt-1" id="strat-target1">$0.00</div>
 </div>
 <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl">

@@ -362,6 +362,7 @@
       const volumeBarPct = Number.isFinite(hero.vol_ratio) ? Math.min(100, Math.max(0, hero.vol_ratio / 3 * 100)) : 0;
       const isSSR = hero.tier === 'SSR';
       const isBottom = hero.category === 'bottom';
+      const retest = hero.category === 'retest' ? hero.breakout_tracking : null;
       const card = document.createElement('div');
       card.onclick = () => openHeroDrawer(hero.symbol);
       
@@ -384,18 +385,20 @@
         ? hero.pattern_type==='BOX' ? '近期細箱' : `箱內${hero.pattern_label || '收窄形態'}`
         : hero.signal_scope==='PRIMARY' && hero.pattern_type==='BOX' ? '主要箱體' : hero.pattern_label || '水平箱體');
       const durationText=marketContextText(hero.box_duration ? String(hero.box_duration).replace(/天$/, '') + ' 個交易日' : '長度未有資料');
-      const firstLine=hero.category==='early'
+      const firstLine=retest ? `🔁 ${patternLabel} · 突破後回踩` : hero.category==='early'
         ? `🚀 ${patternLabel} · 突破第 ${marketContextText(hero.age)} 日`
         : `${hero.pattern_type && hero.pattern_type!=='BOX' ? '📐' : '🛡️'} ${patternLabel} · ${durationText}`;
-      const secondLine=hero.category==='early' ? '收市突破已確認'
+      const secondLine=retest ? marketContextText(retest.caption) : hero.category==='early' ? '收市突破已確認'
         : hero.pattern_type && hero.pattern_type!=='BOX' ? '形態內整理' : reboundText;
       const volumeText=hero.category==='early' && hero.volume_breakout ? '🔥 放量突破'
-        : hero.category!=='early' && hero.volume_rebound ? '🔥 放量反彈' : '';
-      const badgeColor=hero.category==='early' ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+        : retest?.shrink_volume && retest.status==='RETESTING' ? '縮量回踩'
+        : hero.category!=='early' && hero.volume_rebound ? (retest ? '🔥 確認日放量反彈' : '🔥 放量反彈') : '';
+      const badgeColor=retest?.status==='FAILED' ? 'bg-rose-500/10 text-rose-300 border-rose-500/30' : hero.category==='early' ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
         : 'bg-sky-500/10 text-sky-300 border-sky-500/30';
       const posBadge=`<div class="px-2 py-1 rounded border text-[10px] font-bold font-mono ${badgeColor}" style="width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.6">
         <div>${firstLine}</div>
         <div style="display:flex;flex-wrap:wrap;column-gap:0.75em"><span>${secondLine}</span>${volumeText ? `<span>${volumeText}</span>` : ''}</div>
+        ${retest ? `<div>固定突破位 $${retest.level.toFixed(2)}｜距參考位 ${retest.distance_pct>=0?'+':''}${retest.distance_pct.toFixed(2)}%｜完成日線 ${marketContextText(retest.last_processed_date || '—')}</div>` : ''}
       </div>`;
 
       const ir = hero.index_resonance;
@@ -447,6 +450,8 @@
     function renderHeroes() {
       const bottomGrid = document.getElementById('bottom-heroes-grid');
       const earlyGrid = document.getElementById('early-heroes-grid');
+      const retestGrid = document.getElementById('retest-heroes-grid');
+      if (retestGrid) retestGrid.innerHTML = '';
       bottomGrid.innerHTML = '';
       earlyGrid.innerHTML = '';
 
@@ -467,6 +472,19 @@
       // 第六排：升勢名單
       const earlyList = HEROES.filter(h => {
         if (h.category !== 'early') return false;
+        if (currentSector !== 'ALL' && h.sector !== currentSector && !(h.sector && currentSector && (h.sector.startsWith(currentSector) || currentSector.startsWith(h.sector)))) return false;
+        if (currentIndexFilter !== 'ALL') {
+          if (currentIndexFilter === 'WARN') {
+            if (h.index_resonance?.status !== 'warning') return false;
+          } else if (h.index_resonance?.index_code !== currentIndexFilter) {
+            return false;
+          }
+        }
+        return true;
+      });
+
+      const retestList = HEROES.filter(h => {
+        if (h.category !== 'retest') return false;
         if (currentSector !== 'ALL' && h.sector !== currentSector && !(h.sector && currentSector && (h.sector.startsWith(currentSector) || currentSector.startsWith(h.sector)))) return false;
         if (currentIndexFilter !== 'ALL') {
           if (currentIndexFilter === 'WARN') {
@@ -511,6 +529,11 @@
         displayEarlyList.forEach(hero => {
           earlyGrid.appendChild(buildHeroCard(hero));
         });
+      }
+      if (retestGrid) {
+        const list=retestList.slice(0,5);
+        if (!list.length) retestGrid.innerHTML='<div class="col-span-full py-8 text-center text-xs text-slate-400">當前篩選條件下未有突破回踩追蹤標的</div>';
+        else list.forEach(hero => retestGrid.appendChild(buildHeroCard(hero)));
       }
     }
 
@@ -719,7 +742,29 @@
     }
 
     // 更新箱體驗證與診斷面板 (回答使用者的核心目的：箱體畫得正唔正確)
+    function updateRetestStrategy(data) {
+      const event = data.structure?.breakoutTracking;
+      if (!event) return;
+      const set = (id, text) => { const node=document.getElementById(id); if(node)node.textContent=text; };
+      const price=data.prices.at(-1)?.close;
+      const risk=price-event.stop_loss, reward=event.target-price;
+      set('strat-support-label', '固定突破位 (Support)');
+      set('strat-stop-label', '回踩防守 (Stop Loss)');
+      set('strat-target-label', '原形態目標 (Target 1)');
+      set('strat-support', '$'+event.level.toFixed(2));
+      set('strat-stoploss', '$'+event.stop_loss.toFixed(2));
+      set('strat-target1', '$'+event.target.toFixed(2));
+      set('strat-rr', risk>0 && reward>0 ? '1 : '+(reward/risk).toFixed(1) : '—');
+      set('box-strategy-tag', '🔁 '+event.caption);
+      set('regime1-title', '📦 突破當時形態');
+      set('regime1-tag', event.caption);
+      set('box-tactical-advice', `${event.caption}。固定突破位 $${event.level.toFixed(2)}；回踩區 $${event.zone_low.toFixed(2)}–$${event.zone_high.toFixed(2)}。防守及目標參考此突破事件。`);
+    }
+
     function updateBoxValidationUI(data) {
+      for (const [id,text] of [['strat-support-label','下軌支持 (Support)'],['strat-stop-label','破位止損 (Stop Loss)'],['strat-target-label','目標參考 (Target 1)']]) {
+        const node=document.getElementById(id); if(node)node.textContent=text;
+      }
       const v = data.validation;
       const regime = data.structure?.primaryRegime || data.structure?.currentRegime;
       const p = data.prices && data.prices.length > 0 ? data.prices[data.prices.length - 1].close : 0;
@@ -727,6 +772,7 @@
       if (!regime || !v) {
         for(const id of ['metric-cov-val','metric-width-val','metric-dur-val','metric-pos-val','regime1-dates','regime1-range','chk-cov-text','chk-width-text','chk-context-text']) { const e=document.getElementById(id); if(e)e.textContent='未有同次箱體資料'; }
         const r2=document.getElementById('regime2-card');if(r2)r2.classList.add('hidden');
+        updateRetestStrategy(data);
         return;
       }
 
@@ -902,6 +948,7 @@
           .map(log => `<div class="leading-relaxed hover:bg-slate-900 px-1 rounded">${log}</div>`)
           .join('');
       }
+      updateRetestStrategy(data);
     }
 
     // 渲染主畫布 (K線、均線、箱形橫行區間、成交量、十字準星，支援視角縮放與滑鼠拖曳)
@@ -988,6 +1035,12 @@
             if (r.resistance > maxP) maxP = r.resistance;
           }
         });
+      }
+
+      const retestEvent = currentChartData.structure?.breakoutTracking;
+      if (showChartBox && retestEvent) {
+        minP = Math.min(minP, retestEvent.zone_low);
+        maxP = Math.max(maxP, retestEvent.zone_high);
       }
 
       // 上下預留 6% 緩衝
@@ -1216,7 +1269,7 @@
             regimesToDraw.push({
               r: regime,
               role: 'CURRENT',
-              badgeText: `#1 最新${regime.context?.label || '橫行'}`,
+              badgeText: retestEvent ? '#1 突破當時形態' : `#1 最新${regime.context?.label || '橫行'}`,
               borderCol: isBottom ? 'rgba(16, 185, 129, 0.85)' : 'rgba(14, 165, 233, 0.85)',
               bgGrad0: isBottom ? 'rgba(16, 185, 129, 0.20)' : 'rgba(14, 165, 233, 0.20)',
               bgGrad1: isBottom ? 'rgba(16, 185, 129, 0.06)' : 'rgba(14, 165, 233, 0.06)',
@@ -1305,6 +1358,29 @@
 
             }
           });
+        }
+      }
+
+      if (showChartBox && retestEvent) {
+        const begin=allPrices.findIndex(bar=>bar.date===retestEvent.breakout_date);
+        if (begin>=0 && begin<chartViewEnd) {
+          const left=Math.max(margin.left,getX(begin));
+          const right=margin.left+chartW;
+          ctx.save();
+          ctx.beginPath();ctx.rect(margin.left,margin.top,chartW,priceH);ctx.clip();
+          ctx.fillStyle='rgba(45,212,191,0.10)';
+          ctx.fillRect(left,getY(retestEvent.zone_high),right-left,getY(retestEvent.zone_low)-getY(retestEvent.zone_high));
+          ctx.strokeStyle='#2dd4bf';ctx.setLineDash([6,3]);
+          ctx.beginPath();ctx.moveTo(left,getY(retestEvent.level));ctx.lineTo(right,getY(retestEvent.level));ctx.stroke();
+          ctx.fillStyle='#5eead4';ctx.font='10px sans-serif';ctx.textAlign='left';
+          ctx.fillText(`固定突破位 $${retestEvent.level.toFixed(2)}`,left+4,getY(retestEvent.zone_high)-5);
+          for (const [date,label] of [[retestEvent.breakout_date,'突破'],[retestEvent.retest_date,'回踩'],[retestEvent.confirmed_date,'反彈確認'],[retestEvent.failed_date,'失守']]) {
+            const index=allPrices.findIndex(bar=>bar.date===date);
+            if(index<chartViewStart || index>=chartViewEnd || index<0)continue;
+            const x=getX(index),y=getY(allPrices[index].high)-10;
+            ctx.fillText(label,x,y);
+          }
+          ctx.restore();
         }
       }
 
