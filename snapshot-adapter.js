@@ -10,6 +10,13 @@
   const snapshot=await r.json();
   if(!snapshot || !Array.isArray(snapshot.heroes)||!snapshot.charts||id&&snapshot.scan_id!==id)throw Error('掃描快照格式不正確');
   for(const chart of Object.values(snapshot.charts))if(!Array.isArray(chart.prices)||chart.prices.some(p=>!/^\d{4}-\d{2}-\d{2}$/.test(p.date)||!['open','high','low','close'].every(k=>Number.isFinite(p[k]))))throw Error('股價資料格式不正確');
+  if(snapshot.is_demo){
+   const banner=document.createElement('div');banner.setAttribute('role','status');
+   banner.textContent='🧪 模擬測試：所有股票代號、價格及訊號均為虛構。請往下查看 ZONE07「突破回踩追蹤」。';
+   banner.style.cssText='position:sticky;top:0;z-index:60;padding:12px 16px;background:#78350f;color:#fef3c7;border-bottom:2px solid #f59e0b;font-weight:700;text-align:center';
+   document.body.prepend(banner);
+   document.title='模擬測試｜突破回踩追蹤';
+  }
   window.__SCAN_SNAPSHOT__=snapshot;window.__INITIAL_HEROES__=snapshot.heroes;
   const d=snapshot.dashboard||{};
   for(const hero of snapshot.heroes){
