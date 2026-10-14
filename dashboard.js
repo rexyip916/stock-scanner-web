@@ -1378,14 +1378,6 @@
           ctx.fillRect(left,getY(retestEvent.zone_high),right-left,getY(retestEvent.zone_low)-getY(retestEvent.zone_high));
           ctx.strokeStyle='#2dd4bf';ctx.setLineDash([6,3]);
           ctx.beginPath();ctx.moveTo(left,getY(retestEvent.level));ctx.lineTo(right,getY(retestEvent.level));ctx.stroke();
-          ctx.fillStyle='#5eead4';ctx.font='10px sans-serif';ctx.textAlign='left';
-          ctx.fillText(`固定突破位 $${retestEvent.level.toFixed(2)}`,left+4,getY(retestEvent.zone_high)-5);
-          for (const [date,label] of [[retestEvent.breakout_date,'突破'],[retestEvent.retest_date,'回踩'],[retestEvent.confirmed_date,'反彈確認'],[retestEvent.failed_date,'失守']]) {
-            const index=allPrices.findIndex(bar=>bar.date===date);
-            if(index<chartViewStart || index>=chartViewEnd || index<0)continue;
-            const x=getX(index),y=getY(allPrices[index].high)-10;
-            ctx.fillText(label,x,y);
-          }
           ctx.restore();
         }
       }
