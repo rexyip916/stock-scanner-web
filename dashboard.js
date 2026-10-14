@@ -565,11 +565,16 @@
     let isHoveringChart = false;
 
     // 縮放圖表 (滑鼠滾輪或按鈕觸發)
+    // Empty chart space is visual only, never synthetic price data.
+    function chartRightPadding(span) {
+      return Math.min(60, Math.max(5, Math.ceil(span * 0.2)));
+    }
+
     function zoomHeroChart(factor, centerRatio = 0.5) {
       if (!currentChartData || !currentChartData.prices || currentChartData.prices.length === 0) return;
       const totalBars = currentChartData.prices.length;
       const currentSpan = Math.max(8, chartViewEnd - chartViewStart);
-      const newSpan = Math.max(8, Math.min(totalBars, Math.round(currentSpan / factor)));
+      const newSpan = Math.max(8, Math.min(totalBars + chartRightPadding(totalBars), Math.round(currentSpan / factor)));
       
       const centerIndex = chartViewStart + currentSpan * centerRatio;
       let newStart = Math.round(centerIndex - newSpan * centerRatio);
@@ -579,9 +584,9 @@
         newStart = 0;
         newEnd = Math.min(totalBars, newSpan);
       }
-      if (newEnd > totalBars) {
-        newEnd = totalBars;
-        newStart = Math.max(0, totalBars - newSpan);
+      if (newEnd > totalBars + chartRightPadding(newSpan)) {
+        newEnd = totalBars + chartRightPadding(newSpan);
+        newStart = Math.max(0, newEnd - newSpan);
       }
 
       chartViewStart = newStart;
@@ -593,7 +598,7 @@
     function resetHeroChartView() {
       if (!currentChartData || !currentChartData.prices) return;
       chartViewStart = 0;
-      chartViewEnd = currentChartData.prices.length;
+      chartViewEnd = currentChartData.prices.length + chartRightPadding(currentChartData.prices.length);
       renderHeroStockCanvas();
     }
 
@@ -727,7 +732,7 @@
         // 初始化可視區間為全部數據
         if (data.prices && data.prices.length > 0) {
           chartViewStart = Math.max(0, data.prices.length - ({'3mo':63,'6mo':126,'1y':252}[range] || data.prices.length));
-          chartViewEnd = data.prices.length;
+          chartViewEnd = data.prices.length + chartRightPadding(data.prices.length);
         }
 
         // 渲染圖表畫布
@@ -975,9 +980,9 @@
       if (totalAllBars === 0) return;
 
       // 邊界校驗與視角視窗切割 (Viewport Window)
-      if (chartViewEnd <= chartViewStart || chartViewEnd > totalAllBars) {
+      if (chartViewEnd <= chartViewStart || chartViewEnd > totalAllBars + chartRightPadding(chartViewEnd-chartViewStart)) {
         chartViewStart = 0;
-        chartViewEnd = totalAllBars;
+        chartViewEnd = totalAllBars + chartRightPadding(totalAllBars);
       }
       if (chartViewStart < 0) chartViewStart = 0;
       if (chartViewEnd - chartViewStart < 6) {
@@ -986,6 +991,7 @@
 
       const visiblePrices = allPrices.slice(chartViewStart, chartViewEnd);
       const visibleBars = visiblePrices.length;
+      const viewportBars = chartViewEnd-chartViewStart;
       if (visibleBars === 0) return;
 
       // 更新頂部日期標籤為當前視角可見區間
@@ -1052,12 +1058,12 @@
       // 座標映射函數 (基於可視窗口)
       const getX = (globalIdx) => {
         const localIdx = globalIdx - chartViewStart;
-        return margin.left + (localIdx + 0.5) * (chartW / visibleBars);
+        return margin.left + (localIdx + 0.5) * (chartW / viewportBars);
       };
       const getY = (price) => margin.top + (1 - (price - paddedMin) / paddedRange) * priceH;
       const getVolY = (vol) => margin.top + priceH + (showChartVolume ? 12 : 0) + (1 - (vol / (maxVol || 1))) * volH;
 
-      const barSpacing = chartW / visibleBars;
+      const barSpacing = chartW / viewportBars;
       const candleW = Math.max(2, Math.min(22, barSpacing * 0.74));
 
       // 1. 繪製背景網格與價格標籤 (Grid)
@@ -1700,9 +1706,9 @@
             newStart = 0;
             newEnd = visibleSpan;
           }
-          if (newEnd > totalBars) {
-            newEnd = totalBars;
-            newStart = totalBars - visibleSpan;
+          if (newEnd > totalBars + chartRightPadding(visibleSpan)) {
+            newEnd = totalBars + chartRightPadding(visibleSpan);
+            newStart = Math.max(0,newEnd - visibleSpan);
           }
 
           chartViewStart = newStart;
@@ -1724,6 +1730,7 @@
         hoveredCandleIndex = globalIdx;
 
         const bar = allPrices[globalIdx];
+        if (!bar) { tooltip.classList.add('hidden'); hoveredCandleIndex=-1; renderHeroStockCanvas(); return; }
         const prevBar = globalIdx > 0 ? allPrices[globalIdx - 1] : bar;
         const chg = bar.close - prevBar.close;
         const chgPct = prevBar.close > 0 ? (chg / prevBar.close) * 100 : 0;
@@ -2191,7 +2198,7 @@
         note.textContent=[idx.chartNote,savedRegime ? `${formationDisplayLabel(savedRegime)}｜${formationStateText(savedRegime.patternState)}` : '未識別到有效箱體或收窄形態'].filter(Boolean).join(' ');
         note.hidden=false;
         currentIndexChartData = {symbol: idx.code, name: idx.name, prices: data.prices, ema50: data.ema50, ema200: data.ema200, structure:data.structure};
-        indexChartViewStart = 0; indexChartViewEnd = data.prices.length; hoveredIndexCandleIndex = -1;
+        indexChartViewStart = 0; indexChartViewEnd = data.prices.length + chartRightPadding(data.prices.length); hoveredIndexCandleIndex = -1;
         renderIndexChartCanvas();
       } catch (err) {
         const canvas = document.getElementById('idx-stock-canvas');
@@ -2224,9 +2231,9 @@
       const totalBars = allPrices.length;
       if (totalBars === 0) return;
 
-      if (indexChartViewEnd <= indexChartViewStart || indexChartViewEnd > totalBars) {
+      if (indexChartViewEnd <= indexChartViewStart || indexChartViewEnd > totalBars + chartRightPadding(indexChartViewEnd-indexChartViewStart)) {
         indexChartViewStart = 0;
-        indexChartViewEnd = totalBars;
+        indexChartViewEnd = totalBars + chartRightPadding(totalBars);
       }
       if (indexChartViewStart < 0) indexChartViewStart = 0;
       if (indexChartViewEnd - indexChartViewStart < 8) {
@@ -2235,6 +2242,7 @@
 
       const visiblePrices = allPrices.slice(indexChartViewStart, indexChartViewEnd);
       const visibleBars = visiblePrices.length;
+      const viewportBars = indexChartViewEnd-indexChartViewStart;
       if (visibleBars === 0) return;
 
       const margin = { top: 24, right: 75, bottom: 26, left: 14 };
@@ -2277,18 +2285,18 @@
         paddedMin,
         paddedMax,
         paddedRange,
-        visibleBars,
+        visibleBars: viewportBars,
         totalBars
       };
 
       const getX = (globalIdx) => {
         const localIdx = globalIdx - indexChartViewStart;
-        return margin.left + (localIdx + 0.5) * (chartW / visibleBars);
+        return margin.left + (localIdx + 0.5) * (chartW / viewportBars);
       };
       const getY = (price) => margin.top + (1 - (price - paddedMin) / paddedRange) * priceH;
       const getVolY = (vol) => margin.top + priceH + 12 + (1 - (vol / (maxVol || 1))) * volH;
 
-      const barSpacing = chartW / visibleBars;
+      const barSpacing = chartW / viewportBars;
       const candleW = Math.max(2, Math.min(22, barSpacing * 0.74));
 
       // 1. 背景網格與右側價格軸
@@ -2540,7 +2548,7 @@
 
       let newSpan = Math.round(currentSpan / factor);
       if (newSpan < 8) newSpan = 8;
-      if (newSpan > totalBars) newSpan = totalBars;
+      if (newSpan > totalBars + chartRightPadding(totalBars)) newSpan = totalBars + chartRightPadding(totalBars);
 
       const centerBar = indexChartViewStart + Math.round(currentSpan * centerRatio);
       let newStart = centerBar - Math.round(newSpan * centerRatio);
@@ -2550,9 +2558,9 @@
         newStart = 0;
         newEnd = Math.min(totalBars, newSpan);
       }
-      if (newEnd > totalBars) {
-        newEnd = totalBars;
-        newStart = Math.max(0, totalBars - newSpan);
+      if (newEnd > totalBars + chartRightPadding(newSpan)) {
+        newEnd = totalBars + chartRightPadding(newSpan);
+        newStart = Math.max(0, newEnd - newSpan);
       }
 
       indexChartViewStart = newStart;
@@ -2573,9 +2581,9 @@
         newStart = 0;
         newEnd = span;
       }
-      if (newEnd > totalBars) {
-        newEnd = totalBars;
-        newStart = totalBars - span;
+      if (newEnd > totalBars + chartRightPadding(span)) {
+        newEnd = totalBars + chartRightPadding(span);
+        newStart = Math.max(0,newEnd - span);
       }
 
       indexChartViewStart = newStart;
@@ -2587,7 +2595,7 @@
     function resetIndexChartZoom() {
       if (!currentIndexChartData || !currentIndexChartData.prices) return;
       indexChartViewStart = 0;
-      indexChartViewEnd = currentIndexChartData.prices.length;
+      indexChartViewEnd = currentIndexChartData.prices.length + chartRightPadding(currentIndexChartData.prices.length);
       hoveredIndexCandleIndex = -1;
       const tooltip = document.getElementById("idx-chart-tooltip");
       if (tooltip) tooltip.classList.add("hidden");
@@ -2612,7 +2620,8 @@
         if (!lastChartMetrics || !currentIndexChartData) return null;
         const { chartW, priceH, paddedMin, paddedRange, visibleBars, totalBars } = lastChartMetrics;
         const localIdx = Math.max(0, Math.min(visibleBars - 1, Math.round((relX - margin.left) / (chartW / visibleBars))));
-        const barIdx = Math.max(0, Math.min(totalBars - 1, indexChartViewStart + localIdx));
+        const barIdx = indexChartViewStart + localIdx;
+        if (barIdx >= totalBars) return null;
         const price = (paddedMin + paddedRange) - ((relY - margin.top) / priceH) * paddedRange;
         return { barIdx, price: Number(price.toFixed(2)) };
       }
@@ -2678,9 +2687,9 @@
             newStart = 0;
             newEnd = visibleSpan;
           }
-          if (newEnd > totalBars) {
-            newEnd = totalBars;
-            newStart = totalBars - visibleSpan;
+          if (newEnd > totalBars + chartRightPadding(visibleSpan)) {
+            newEnd = totalBars + chartRightPadding(visibleSpan);
+            newStart = Math.max(0,newEnd - visibleSpan);
           }
 
           indexChartViewStart = newStart;
@@ -2702,6 +2711,7 @@
         hoveredIndexCandleIndex = globalIdx;
 
         const bar = allPrices[globalIdx];
+        if (!bar) { tooltip.classList.add('hidden'); hoveredIndexCandleIndex=-1; renderIndexChartCanvas(); return; }
         const prevBar = globalIdx > 0 ? allPrices[globalIdx - 1] : bar;
         const chg = bar.close - prevBar.close;
         const chgPct = prevBar.close > 0 ? (chg / prevBar.close) * 100 : 0;
