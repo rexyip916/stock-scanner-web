@@ -398,7 +398,6 @@
       const posBadge=`<div class="px-2 py-1 rounded border text-[10px] font-bold font-mono ${badgeColor}" style="width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.6">
         <div>${firstLine}</div>
         <div style="display:flex;flex-wrap:wrap;column-gap:0.75em"><span>${secondLine}</span>${volumeText ? `<span>${volumeText}</span>` : ''}</div>
-        ${retest ? `<div>固定突破位 $${retest.level.toFixed(2)}｜距參考位 ${retest.distance_pct>=0?'+':''}${retest.distance_pct.toFixed(2)}%｜完成日線 ${marketContextText(retest.last_processed_date || '—')}</div>` : ''}
       </div>`;
 
       const ir = hero.index_resonance;
