@@ -687,7 +687,7 @@
         const url = `/api/stock-chart?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}&scan=${encodeURIComponent(new URLSearchParams(location.search).get('scan') || '')}${isRefresh ? '&_t=' + Date.now() : ''}`;
         let singleResult = selectedHero?.analysis_only && selectedHero.symbol === symbol ? window.singleStockResults?.get(symbol) : null;
         if (singleResult && isRefresh) {
-          const response=await fetch('/api/analyze?symbol='+encodeURIComponent(symbol),{cache:'no-store'});
+          const response=await fetch(window.singleStockApiUrl ? window.singleStockApiUrl(symbol) : '/api/analyze?symbol='+encodeURIComponent(symbol),{cache:'no-store'});
           const refreshed=await response.json();
           if(!response.ok)throw Error(refreshed.error || '單股分析更新失敗');
           window.singleStockResults.set(symbol,refreshed);

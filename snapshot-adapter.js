@@ -92,6 +92,6 @@
    for(const id of ['calib-input-smart','calib-input-dumb']){const e=document.getElementById(id);if(e)e.value=d.money?(id.endsWith('smart')?d.money.smart_conf:d.money.dumb_conf):'';}
    status.textContent=`掃描時間：${snapshot.scan_time} ｜所有數據固定於這次掃描`;if(!snapshot.dashboard)status.textContent+=' ｜舊快照未包含 ZONE01–04 資料，請重新跑一次掃描。';
   }
-  const script=document.createElement('script');script.src='dashboard.js?v=single-stock-v1';script.onload=()=>{fillMarket();status.hidden=true;document.body.removeAttribute('data-snapshot-loading');const search=document.createElement('script');search.src='single-stock.js?v=1';document.body.append(search);};script.onerror=()=>{status.textContent='網站腳本未能載入，請重新整理。';};document.body.append(script);
+  const script=document.createElement('script');script.src='dashboard.js?v=single-stock-background-v2';script.onload=()=>{fillMarket();status.hidden=true;document.body.removeAttribute('data-snapshot-loading');const search=document.createElement('script');search.src='single-stock.js?v=2';document.body.append(search);};script.onerror=()=>{status.textContent='網站腳本未能載入，請重新整理。';};document.body.append(script);
  }catch(error){status.textContent=error.message;}
 })();
