@@ -41,7 +41,7 @@
   }
   window.fetch=async(input,options={})=>{
    const url=new URL(typeof input==='string'?input:input.url,location.href);
-   if(url.origin!==new URL(location.href).origin || url.pathname==='/api/analyze' || url.pathname==='/api/health' || !url.pathname.startsWith('/api/'))return nativeFetch(input,options);
+   if(!url.pathname.startsWith('/api/'))return nativeFetch(input,options);
    const path=url.pathname;
    if(path==='/api/signals')return json({heroes:snapshot.heroes,sectors:d.sectors||[],scan_time:snapshot.scan_time,tg_text:snapshot.tg_text});
    if(path==='/api/stock-chart'){const result=chartData((url.searchParams.get('symbol')||'').toUpperCase());return result?json(result):json({error:'這次掃描未有此圖表'},404);}
@@ -92,6 +92,6 @@
    for(const id of ['calib-input-smart','calib-input-dumb']){const e=document.getElementById(id);if(e)e.value=d.money?(id.endsWith('smart')?d.money.smart_conf:d.money.dumb_conf):'';}
    status.textContent=`掃描時間：${snapshot.scan_time} ｜所有數據固定於這次掃描`;if(!snapshot.dashboard)status.textContent+=' ｜舊快照未包含 ZONE01–04 資料，請重新跑一次掃描。';
   }
-  const script=document.createElement('script');script.src='dashboard.js?v=single-stock-background-v2';script.onload=()=>{fillMarket();status.hidden=true;document.body.removeAttribute('data-snapshot-loading');const search=document.createElement('script');search.src='single-stock.js?v=2';document.body.append(search);};script.onerror=()=>{status.textContent='網站腳本未能載入，請重新整理。';};document.body.append(script);
+  const script=document.createElement('script');script.src='dashboard.js?v=no-search-v1';script.onload=()=>{fillMarket();status.hidden=true;document.body.removeAttribute('data-snapshot-loading');};script.onerror=()=>{status.textContent='網站腳本未能載入，請重新整理。';};document.body.append(script);
  }catch(error){status.textContent=error.message;}
 })();

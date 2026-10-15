@@ -685,18 +685,9 @@
 
       try {
         const url = `/api/stock-chart?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}&scan=${encodeURIComponent(new URLSearchParams(location.search).get('scan') || '')}${isRefresh ? '&_t=' + Date.now() : ''}`;
-        let singleResult = selectedHero?.analysis_only && selectedHero.symbol === symbol ? window.singleStockResults?.get(symbol) : null;
-        if (singleResult && isRefresh) {
-          const response=await fetch(window.singleStockApiUrl ? window.singleStockApiUrl(symbol) : '/api/analyze?symbol='+encodeURIComponent(symbol),{cache:'no-store'});
-          const refreshed=await response.json();
-          if(!response.ok)throw Error(refreshed.error || '單股分析更新失敗');
-          window.singleStockResults.set(symbol,refreshed);
-          selectedHero=refreshed.hero;
-          singleResult=refreshed;
-        }
-        const res = singleResult ? null : await fetch(url);
-        if (res && !res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = singleResult ? singleResult.chart : await res.json();
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
         currentChartData = data;
 
         // 更新頂部最新價與漲跌幅
@@ -779,19 +770,13 @@
       for (const [id,text] of [['strat-support-label','下軌支持 (Support)'],['strat-stop-label','破位止損 (Stop Loss)'],['strat-target-label','目標參考 (Target 1)']]) {
         const node=document.getElementById(id); if(node)node.textContent=text;
       }
-      for (const id of ['strat-support','strat-stoploss','strat-target1','strat-rr']) {
-        const node=document.getElementById(id);if(node)node.textContent='—';
-      }
       const v = data.validation;
       const regime = data.structure?.primaryRegime || data.structure?.currentRegime;
       const p = data.prices && data.prices.length > 0 ? data.prices[data.prices.length - 1].close : 0;
 
       if (!regime || !v) {
-        for(const id of ['legend-item-res','legend-item-mid','legend-item-sup','legend-item-r1']) { const node=document.getElementById(id);if(node)node.classList.add('hidden'); }
-        for(const id of ['regime1-title','regime1-tag','box-strategy-tag']) { const node=document.getElementById(id);if(node)node.textContent='未識別到有效形態'; }
         for(const id of ['metric-cov-val','metric-width-val','metric-dur-val','metric-pos-val','regime1-dates','regime1-range','chk-cov-text','chk-width-text','chk-context-text']) { const e=document.getElementById(id); if(e)e.textContent='未有同次箱體資料'; }
         const r2=document.getElementById('regime2-card');if(r2)r2.classList.add('hidden');
-        const advice=document.getElementById('box-tactical-advice');if(advice)advice.textContent='未識別到有效箱體或收窄形態。';
         updateRetestStrategy(data);
         return;
       }
@@ -915,7 +900,7 @@
       setTxt('chk-context-text', `背景語意: 【${v.contextLabel}】 (${dropTxt} · ${ma200Txt} · ${v.reason})`);
 
       // 捉底作戰手冊
-      const selectedHero=data.source==='single-stock-analysis' ? window.singleStockResults?.get(data.symbol)?.hero : HEROES.find(h=>h.symbol===data.symbol);
+      const selectedHero=HEROES.find(h=>h.symbol===data.symbol);
       const signalRegime = data.structure?.currentRegime;
       const strategyRegime = signalRegime || regime;
       const line = strategyRegime.triangle?.lowerLine;
@@ -1827,11 +1812,11 @@
     })();
 
     // 英雄詳情抽屜 (點選個股時彈出)
-    function openHeroDrawer(symbol, analysisMode = false) {
+    function openHeroDrawer(symbol) {
       closeSmartMoneyDrawer();
       closeChartDrawer();
       closeIndexDrawer();
-      const h = (analysisMode ? window.singleStockResults?.get(symbol)?.hero : null) || HEROES.find(x => x.symbol === symbol) || { symbol, name: symbol, price: 100, change: 0, quantile: { high: 110, mid: 100, low: 90, stopLoss: 88, pos_pct: 50 }, skills: [], cp: 8500, sector: "美股", tier: "SR" };
+      const h = HEROES.find(x => x.symbol === symbol) || { symbol, name: symbol, price: 100, change: 0, quantile: { high: 110, mid: 100, low: 90, stopLoss: 88, pos_pct: 50 }, skills: [], cp: 8500, sector: "美股", tier: "SR" };
       selectedHero = h;
       currentStockSymbol = symbol;
 
