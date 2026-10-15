@@ -47,6 +47,15 @@
 </div>
 </header>
 <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+<section class="bg-slate-900 border border-slate-700 rounded-2xl p-4 space-y-3" aria-labelledby="single-stock-title">
+<h2 id="single-stock-title" class="font-bold text-white">🔎 單股分析</h2>
+<form id="single-stock-form" class="flex flex-wrap gap-3">
+<label for="single-stock-symbol" class="text-sm text-slate-300">股票代號</label>
+<input id="single-stock-symbol" name="symbol" maxlength="25" placeholder="例如 NVDA、AAPL、BRK-B" autocomplete="off" autocapitalize="characters" spellcheck="false" required class="bg-slate-950 border border-slate-600 rounded-xl px-3 py-2 text-white" style="min-width:180px;flex:1"/>
+<button id="single-stock-submit" type="submit" class="bg-sky-500 text-slate-950 rounded-xl px-4 py-2 font-bold">分析及查看圖表</button>
+</form>
+<p id="single-stock-status" role="status" aria-live="polite" class="text-xs text-slate-400">獨立分析最新可取得日線，不加入每日掃描名單或發送 Telegram。網上版會提供本機分析入口。</p>
+</section>
 <!-- ZONE 01: 第一排 · 📈 大市指數 (獨立曜石跑馬座艙) -->
 <section class="bg-slate-900/60 border border-slate-800 rounded-3xl p-5 shadow-2xl relative overflow-hidden backdrop-blur-sm">
 <div class="absolute top-0 left-0 w-24 h-1 bg-gradient-to-r from-sky-500 to-emerald-400"></div>
@@ -1068,6 +1077,6 @@
 </div>
 <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 hidden" id="drawer-backdrop" onclick="closeAllDrawers()"></div>
 <!-- JavaScript 核心 -->
-<script src="snapshot-adapter.js?v=20261014-clean-chart-1"></script>
+<script src="snapshot-adapter.js?v=single-stock-v1"></script>
 </body>
 </html>
