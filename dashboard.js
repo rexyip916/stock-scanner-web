@@ -393,7 +393,7 @@
         : hero.pattern_type && hero.pattern_type!=='BOX' ? '形態內整理' : reboundText;
       const volumeText=hero.category==='early' && hero.volume_breakout ? (hero.breakout_label ? '🔥 突破日放量' : '🔥 放量突破')
         : retest?.shrink_volume && retest.status==='RETESTING' ? '縮量回踩'
-        : hero.category!=='early' && hero.volume_rebound ? (retest ? '🔥 確認日放量反彈' : '🔥 放量反彈') : '';
+        : hero.category!=='early' && hero.volume_rebound ? (retest ? `🔥 確認日放量 ${Number(retest.confirmation_volume_ratio).toFixed(2)}x` : '🔥 放量反彈') : '';
       const badgeColor=retest?.status==='FAILED' ? 'bg-rose-500/10 text-rose-300 border-rose-500/30' : hero.category==='early' ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
         : 'bg-sky-500/10 text-sky-300 border-sky-500/30';
       const posBadge=`<div class="px-2 py-1 rounded border text-[10px] font-bold font-mono ${badgeColor}" style="width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.6">
@@ -567,6 +567,39 @@
 
     // 縮放圖表 (滑鼠滾輪或按鈕觸發)
     // Empty chart space is visual only, never synthetic price data.
+    // Standard trailing SMA20 includes the current bar and uses full history.
+    // A missing/invalid volume leaves a gap rather than becoming a zero.
+    function volumeSMA20(prices) {
+      return prices.map((_, i) => {
+        if (i < 19) return null;
+        const values = prices.slice(i - 19, i + 1).map(p => p.volume);
+        return values.every(v => Number.isFinite(v) && v >= 0)
+          ? values.reduce((a, b) => a + b, 0) / 20 : null;
+      });
+    }
+
+    function drawVolumeSMA20(ctx, averages, start, end, getX, getY, labelX, labelY) {
+      ctx.save();
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 1.4;
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      let connected = false;
+      for (let i = start; i < Math.min(end, averages.length); i++) {
+        if (!Number.isFinite(averages[i])) { connected = false; continue; }
+        if (connected) ctx.lineTo(getX(i), getY(averages[i]));
+        else ctx.moveTo(getX(i), getY(averages[i]));
+        connected = true;
+      }
+      ctx.stroke();
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText('VOL MA20', labelX, labelY);
+      ctx.restore();
+    }
+
     function chartRightPadding(span) {
       return Math.min(60, Math.max(5, Math.ceil(span * 0.2)));
     }
@@ -1016,12 +1049,16 @@
       let minP = Infinity;
       let maxP = -Infinity;
       let maxVol = 0;
+      const volumeMA20 = volumeSMA20(allPrices);
 
       visiblePrices.forEach(bar => {
         if (bar.low < minP) minP = bar.low;
         if (bar.high > maxP) maxP = bar.high;
         if (bar.volume > maxVol) maxVol = bar.volume;
       });
+      for (const value of volumeMA20.slice(chartViewStart, chartViewEnd)) {
+        if (Number.isFinite(value)) maxVol = Math.max(maxVol, value);
+      }
 
       // 若箱體開啟且可見，將所有有效箱體的支撐與阻力納入價格極值，確保箱體上下軌清晰可見
       if (showChartBox && currentChartData.structure) {
@@ -1458,6 +1495,11 @@
           ctx.fillStyle = isUp ? "rgba(16, 185, 129, 0.45)" : "rgba(244, 63, 94, 0.45)";
           ctx.fillRect(x - candleW * 0.4, y, candleW * 0.8, h);
         }
+      }
+
+      if (showChartVolume && volH > 0) {
+        drawVolumeSMA20(ctx, volumeMA20, chartViewStart, chartViewEnd, getX, getVolY,
+          margin.left, margin.top + priceH + 12);
       }
 
       // 4. 繪製 K線蠟燭圖 或 收盤折線圖
@@ -2248,12 +2290,16 @@
       let minP = Infinity;
       let maxP = -Infinity;
       let maxVol = 0;
+      const volumeMA20 = volumeSMA20(allPrices);
 
       visiblePrices.forEach(bar => {
         if (bar.low < minP) minP = bar.low;
         if (bar.high > maxP) maxP = bar.high;
         if (bar.volume > maxVol) maxVol = bar.volume;
       });
+      for (const value of volumeMA20.slice(indexChartViewStart, indexChartViewEnd)) {
+        if (Number.isFinite(value)) maxVol = Math.max(maxVol, value);
+      }
 
       const patterns = computeChartPatterns(allPrices);
       for (const pattern of patterns) {
@@ -2327,6 +2373,9 @@
         ctx.fillStyle = isUp ? "rgba(16, 185, 129, 0.25)" : "rgba(244, 63, 94, 0.25)";
         ctx.fillRect(x - candleW / 2, y, candleW, h);
       }
+
+      drawVolumeSMA20(ctx, volumeMA20, indexChartViewStart, indexChartViewEnd, getX, getVolY,
+        margin.left, margin.top + priceH + 12);
 
       // Saved formations share the stock chart's two-pattern and reference limits.
       for (const pattern of patterns) {

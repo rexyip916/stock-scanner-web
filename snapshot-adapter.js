@@ -21,6 +21,16 @@
   const d=snapshot.dashboard||{};
   for(const hero of snapshot.heroes){
    const bars=snapshot.charts[hero.symbol]?.prices;
+   const event=hero.breakout_tracking;
+   if(hero.category==='retest' && event){
+    const index=bars?.findIndex(b=>b.date===event.confirmed_date) ?? -1;
+    const previous=index>=20 ? bars.slice(index-20,index).map(b=>b.volume) : [];
+    const current=index>=0 ? bars[index].volume : null;
+    const mean=previous.length===20 && previous.every(v=>Number.isFinite(v)&&v>=0) ? previous.reduce((a,b)=>a+b,0)/20 : 0;
+    event.confirmation_volume_ratio=Number.isFinite(current)&&current>0&&mean>0 ? current/mean : null;
+    event.volume_rebound=Number.isFinite(event.confirmation_volume_ratio)&&event.confirmation_volume_ratio>=1.2;
+    hero.volume_rebound=event.status==='CONFIRMED'&&event.volume_rebound;
+   }
    if(bars?.length>1)hero.change=(bars.at(-1).close/bars.at(-2).close-1)*100;
    // New scans carry server-calculated sector pairing and multi-day direction.
    // Older scans must not revive the former "one down day = warning" rule.
@@ -92,6 +102,6 @@
    for(const id of ['calib-input-smart','calib-input-dumb']){const e=document.getElementById(id);if(e)e.value=d.money?(id.endsWith('smart')?d.money.smart_conf:d.money.dumb_conf):'';}
    status.textContent=`掃描時間：${snapshot.scan_time} ｜所有數據固定於這次掃描`;if(!snapshot.dashboard)status.textContent+=' ｜舊快照未包含 ZONE01–04 資料，請重新跑一次掃描。';
   }
-  const script=document.createElement('script');script.src='dashboard.js?v=retest-ranking-v2';script.onload=()=>{fillMarket();status.hidden=true;document.body.removeAttribute('data-snapshot-loading');};script.onerror=()=>{status.textContent='網站腳本未能載入，請重新整理。';};document.body.append(script);
+  const script=document.createElement('script');script.src='dashboard.js?v=volume-ma20-v1';script.onload=()=>{fillMarket();status.hidden=true;document.body.removeAttribute('data-snapshot-loading');};script.onerror=()=>{status.textContent='網站腳本未能載入，請重新整理。';};document.body.append(script);
  }catch(error){status.textContent=error.message;}
 })();
