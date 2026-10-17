@@ -421,8 +421,8 @@
         : hero.category!=='early' && hero.volume_rebound ? (retest ? `🔥 確認日放量 ${Number(retest.confirmation_volume_ratio).toFixed(2)}x` : '🔥 放量反彈') : '';
       const badgeColor=retest?.status==='FAILED' ? 'bg-rose-500/10 text-rose-300 border-rose-500/30' : hero.category==='early' ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
         : 'bg-sky-500/10 text-sky-300 border-sky-500/30';
-      const confirmedVolumeSignal = (hero.category === 'early' && hero.volume_breakout && hero.pattern_state === 'BREAKOUT_UP') ||
-        (retest?.status === 'CONFIRMED' && hero.volume_rebound && Number.isFinite(retest.confirmation_volume_ratio) && retest.confirmation_volume_ratio >= 1.2);
+      const confirmedVolumeSignal = hero.signal_is_first_day !== false && ((hero.category === 'early' && hero.age === 1 && hero.volume_breakout && hero.pattern_state === 'BREAKOUT_UP') ||
+        (retest?.status === 'CONFIRMED' && retest.rebound_days === 1 && hero.volume_rebound && Number.isFinite(retest.confirmation_volume_ratio) && retest.confirmation_volume_ratio >= 1.2));
       const abnormalVolume = Number.isFinite(hero.vol_ratio) && hero.vol_ratio >= 3;
       if (abnormalVolume || confirmedVolumeSignal) card.className += ' metric-alert signal-tone-' + (abnormalVolume ? 'caution' : 'signal');
       const posBadge=`<div class="px-2 py-1 rounded border text-[10px] font-bold font-mono ${badgeColor}" style="width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.6">
