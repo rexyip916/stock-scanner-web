@@ -1,5 +1,12 @@
     function metricAlertState(kind, value) {
-      if (!Number.isFinite(value) || value < 0 || value > 100) return null;
+      if (!Number.isFinite(value)) return null;
+      if (kind === 'vix') {
+        if (value <= 0) return null;
+        if (value <= 14) return {tone:'caution', label:'VIX 極低波動，留意市場鬆懈'};
+        if (value >= 25) return {tone:'risk', label:'VIX 高波動風險'};
+        return null;
+      }
+      if (value < 0 || value > 100) return null;
       const high = value >= 80, low = value <= 20;
       if (!high && !low) return null;
       if (kind === 'smart') return {tone:high ? 'good' : 'risk', label:high ? 'Smart Money 極高' : 'Smart Money 極低'};
