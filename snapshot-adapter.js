@@ -17,7 +17,7 @@
    document.body.prepend(banner);
    document.title='模擬測試｜突破回踩追蹤';
   }
-  window.__SCAN_SNAPSHOT__=snapshot;window.__INITIAL_HEROES__=snapshot.heroes;
+  window.__SCAN_SNAPSHOT__=snapshot;window.__INITIAL_HEROES__=snapshot.heroes;window.__INITIAL_RETEST_WARNINGS__=snapshot.retest_warnings||[];
   const d=snapshot.dashboard||{};
   for(const hero of snapshot.heroes){
    const bars=snapshot.charts[hero.symbol]?.prices;
@@ -43,7 +43,7 @@
    const url=new URL(typeof input==='string'?input:input.url,location.href);
    if(!url.pathname.startsWith('/api/'))return nativeFetch(input,options);
    const path=url.pathname;
-   if(path==='/api/signals')return json({heroes:snapshot.heroes,sectors:d.sectors||[],scan_time:snapshot.scan_time,tg_text:snapshot.tg_text});
+   if(path==='/api/signals')return json({retest_warnings:snapshot.retest_warnings||[],heroes:snapshot.heroes,sectors:d.sectors||[],scan_time:snapshot.scan_time,tg_text:snapshot.tg_text});
    if(path==='/api/stock-chart'){const result=chartData((url.searchParams.get('symbol')||'').toUpperCase());return result?json(result):json({error:'這次掃描未有此圖表'},404);}
    if(path==='/api/history')return json(d.history||[]);
    if(path==='/api/calibration'){
@@ -92,6 +92,6 @@
    for(const id of ['calib-input-smart','calib-input-dumb']){const e=document.getElementById(id);if(e)e.value=d.money?(id.endsWith('smart')?d.money.smart_conf:d.money.dumb_conf):'';}
    status.textContent=`掃描時間：${snapshot.scan_time} ｜所有數據固定於這次掃描`;if(!snapshot.dashboard)status.textContent+=' ｜舊快照未包含 ZONE01–04 資料，請重新跑一次掃描。';
   }
-  const script=document.createElement('script');script.src='dashboard.js?v=breakout-ranking-v1';script.onload=()=>{fillMarket();status.hidden=true;document.body.removeAttribute('data-snapshot-loading');};script.onerror=()=>{status.textContent='網站腳本未能載入，請重新整理。';};document.body.append(script);
+  const script=document.createElement('script');script.src='dashboard.js?v=retest-ranking-v1';script.onload=()=>{fillMarket();status.hidden=true;document.body.removeAttribute('data-snapshot-loading');};script.onerror=()=>{status.textContent='網站腳本未能載入，請重新整理。';};document.body.append(script);
  }catch(error){status.textContent=error.message;}
 })();

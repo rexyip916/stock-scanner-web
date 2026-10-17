@@ -15,6 +15,7 @@
     }
 
 
+    let RETEST_WARNINGS = window.__INITIAL_RETEST_WARNINGS__ || [];
     const HEROES = (window.__INITIAL_HEROES__ && window.__INITIAL_HEROES__.length) ? window.__INITIAL_HEROES__ : [];
     const SECTORS = (window.__INITIAL_SECTORS__ && window.__INITIAL_SECTORS__.length) ? window.__INITIAL_SECTORS__ : [];
 
@@ -534,6 +535,16 @@
         const list=retestList.slice(0,5);
         if (!list.length) retestGrid.innerHTML='<div class="col-span-full py-8 text-center text-xs text-slate-400">當前篩選條件下未有突破回踩追蹤標的</div>';
         else list.forEach(hero => retestGrid.appendChild(buildHeroCard(hero)));
+        const warnings = typeof RETEST_WARNINGS === 'undefined' ? [] : RETEST_WARNINGS;
+        const visibleWarnings = warnings.filter(w => currentSector === 'ALL' ||
+          (w.sector && (w.sector.startsWith(currentSector) || currentSector.startsWith(w.sector))));
+        // Warnings are a separate footer, never candidates or market-direction signals.
+        if (visibleWarnings.length && currentIndexFilter === 'ALL') {
+          const footer = document.createElement('div');
+          footer.className = 'col-span-full rounded-xl border border-rose-500/30 p-4 text-xs text-rose-300 whitespace-pre-line';
+          footer.textContent = '⚠️ 回踩失守警告（不佔有效 Top 5）\n' + visibleWarnings.map(w => `${w.symbol} | ${w.sector || ''} | ${w.caption}`).join('\n');
+          retestGrid.appendChild(footer);
+        }
       }
     }
 
@@ -3521,6 +3532,7 @@
     function applyScanSnapshot(snapshot) {
       if (!Array.isArray(snapshot.heroes)) throw new Error('Invalid scan snapshot');
       HEROES.splice(0, HEROES.length, ...snapshot.heroes);
+      RETEST_WARNINGS = Array.isArray(snapshot.retest_warnings) ? snapshot.retest_warnings : [];
       window.__INITIAL_TG_TEXT__ = snapshot.tg_text || '';
       const rawEl = document.getElementById('raw-tg-text');
       if (rawEl) rawEl.textContent = snapshot.tg_text || '尚未收到 Telegram 掃描原文。';
@@ -3533,7 +3545,7 @@
       renderSectors();
     }
 
-    applyScanSnapshot({ heroes: HEROES.slice(), tg_text: window.__INITIAL_TG_TEXT__, scan_time: window.__INITIAL_SCAN_TIME__ });
+    applyScanSnapshot({ retest_warnings: RETEST_WARNINGS.slice(), heroes: HEROES.slice(), tg_text: window.__INITIAL_TG_TEXT__, scan_time: window.__INITIAL_SCAN_TIME__ });
     async function refreshScanSnapshot() {
       try {
         const response = await fetch('/api/signals?scan=' + encodeURIComponent(new URLSearchParams(location.search).get('scan') || ''), { cache: 'no-store' });
