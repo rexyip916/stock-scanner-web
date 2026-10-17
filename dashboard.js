@@ -388,10 +388,10 @@
       const firstLine=retest ? `🔁 ${patternLabel} · 突破後回踩` : hero.category==='early'
         ? `🚀 ${patternLabel} · 突破第 ${marketContextText(hero.age)} 日`
         : `${hero.pattern_type && hero.pattern_type!=='BOX' ? '📐' : '🛡️'} ${patternLabel} · ${durationText}`;
-      const secondLine=retest ? marketContextText(retest.caption) : hero.category==='early' ? '收市突破已確認'
+      const secondLine=retest ? marketContextText(retest.caption) : hero.category==='early' ? marketContextText(hero.breakout_label || '收市突破已確認')
         : hero.consolidation_label ? marketContextText(hero.consolidation_label)+(Number.isInteger(reboundDays)&&reboundDays>0 ? ' · '+reboundText : '')
         : hero.pattern_type && hero.pattern_type!=='BOX' ? '形態內整理' : reboundText;
-      const volumeText=hero.category==='early' && hero.volume_breakout ? '🔥 放量突破'
+      const volumeText=hero.category==='early' && hero.volume_breakout ? (hero.breakout_label ? '🔥 突破日放量' : '🔥 放量突破')
         : retest?.shrink_volume && retest.status==='RETESTING' ? '縮量回踩'
         : hero.category!=='early' && hero.volume_rebound ? (retest ? '🔥 確認日放量反彈' : '🔥 放量反彈') : '';
       const badgeColor=retest?.status==='FAILED' ? 'bg-rose-500/10 text-rose-300 border-rose-500/30' : hero.category==='early' ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
