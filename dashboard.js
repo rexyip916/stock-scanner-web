@@ -389,6 +389,7 @@
         ? `🚀 ${patternLabel} · 突破第 ${marketContextText(hero.age)} 日`
         : `${hero.pattern_type && hero.pattern_type!=='BOX' ? '📐' : '🛡️'} ${patternLabel} · ${durationText}`;
       const secondLine=retest ? marketContextText(retest.caption) : hero.category==='early' ? '收市突破已確認'
+        : hero.consolidation_label ? marketContextText(hero.consolidation_label)+(Number.isInteger(reboundDays)&&reboundDays>0 ? ' · '+reboundText : '')
         : hero.pattern_type && hero.pattern_type!=='BOX' ? '形態內整理' : reboundText;
       const volumeText=hero.category==='early' && hero.volume_breakout ? '🔥 放量突破'
         : retest?.shrink_volume && retest.status==='RETESTING' ? '縮量回踩'
