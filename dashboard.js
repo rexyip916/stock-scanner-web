@@ -1,3 +1,27 @@
+    function metricAlertState(kind, value) {
+      if (!Number.isFinite(value) || value < 0 || value > 100) return null;
+      const high = value >= 80, low = value <= 20;
+      if (!high && !low) return null;
+      if (kind === 'smart') return {tone:high ? 'good' : 'risk', label:high ? 'Smart Money 極高' : 'Smart Money 極低'};
+      if (kind === 'dumb') return {tone:high ? 'risk' : 'good', label:high ? 'Dumb Money 極高' : 'Dumb Money 極低'};
+      if (kind === 'sentiment') return {tone:high ? 'risk' : 'caution', label:high ? '極端樂觀' : '極端悲觀'};
+      return null;
+    }
+
+    function applyMetricAlert(element, kind, value) {
+      if (!element) return;
+      element.classList.remove('metric-alert','signal-tone-risk','signal-tone-caution','signal-tone-good','signal-tone-signal');
+      const state = metricAlertState(kind, value);
+      if (state) {
+        element.classList.add('metric-alert', 'signal-tone-' + state.tone);
+        element.setAttribute('data-metric-alert', state.label);
+        element.setAttribute('title', state.label);
+      } else if (element.hasAttribute('data-metric-alert')) {
+        element.removeAttribute('data-metric-alert');
+        element.removeAttribute('title');
+      }
+    }
+
     function priceChangeLabel(change) {
       if (!Number.isFinite(change)) return '未有資料';
       if (change >= 2) return '🚀 強勢上升';
@@ -396,9 +420,12 @@
         : hero.category!=='early' && hero.volume_rebound ? (retest ? `🔥 確認日放量 ${Number(retest.confirmation_volume_ratio).toFixed(2)}x` : '🔥 放量反彈') : '';
       const badgeColor=retest?.status==='FAILED' ? 'bg-rose-500/10 text-rose-300 border-rose-500/30' : hero.category==='early' ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
         : 'bg-sky-500/10 text-sky-300 border-sky-500/30';
+      const confirmedVolumeSignal = (hero.category === 'early' && hero.volume_breakout && hero.pattern_state === 'BREAKOUT_UP') ||
+        (retest?.status === 'CONFIRMED' && hero.volume_rebound && Number.isFinite(retest.confirmation_volume_ratio) && retest.confirmation_volume_ratio >= 1.2);
+      const abnormalVolume = Number.isFinite(hero.vol_ratio) && hero.vol_ratio >= 3;
       const posBadge=`<div class="px-2 py-1 rounded border text-[10px] font-bold font-mono ${badgeColor}" style="width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.6">
         <div>${firstLine}</div>
-        <div style="display:flex;flex-wrap:wrap;column-gap:0.75em"><span>${secondLine}</span>${volumeText ? `<span>${volumeText}</span>` : ''}</div>
+        <div style="display:flex;flex-wrap:wrap;column-gap:0.75em"><span>${secondLine}</span>${volumeText ? `<span class="${confirmedVolumeSignal ? 'metric-alert signal-tone-signal' : ''}">${volumeText}</span>` : ''}</div>
       </div>`;
 
       const ir = hero.index_resonance;
@@ -436,7 +463,7 @@
         <!-- 成交量倍數：所有卡片統一以 3X 為滿格 -->
         <div class="space-y-1.5 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
           <div class="flex justify-between items-center text-[11px] font-bold">
-            <span class="text-slate-300">⚡成交量 <strong class="text-white mono-num">${Number.isFinite(hero.vol_ratio) ? hero.vol_ratio.toFixed(2) + 'X' : '—'}</strong></span>
+            <span class="text-slate-300">⚡成交量 <strong class="text-white mono-num${abnormalVolume ? ' metric-alert signal-tone-caution' : ''}"${abnormalVolume ? ' title="異常巨量：達前20日平均3倍或以上"' : ''}>${Number.isFinite(hero.vol_ratio) ? hero.vol_ratio.toFixed(2) + 'X' : '—'}${abnormalVolume ? '｜異常巨量' : ''}</strong></span>
           </div>
           <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
             <div class="mana-bar-fill h-full rounded-full transition-all duration-500" style="width: ${volumeBarPct}%"></div>
@@ -3102,6 +3129,9 @@
       if (mDm) mDm.textContent = dumb + '%';
       if (mSp) mSp.textContent = (spread > 0 ? '+' : '') + spread + '%';
 
+      for (const id of ['zone02-sm-val','chart-drawer-sm-val','engine-sm-val']) applyMetricAlert(document.getElementById(id), 'smart', smart);
+      for (const id of ['zone02-dm-val','chart-drawer-dm-val','engine-dm-val']) applyMetricAlert(document.getElementById(id), 'dumb', dumb);
+
       // 5. 重新渲染圖表
       initOrUpdateCharts();
     }
@@ -3110,7 +3140,7 @@
       await Promise.resolve();
       const money=window.__SCAN_SNAPSHOT__.dashboard?.money;
       if(money) applySentimentMetricsToAll(money.smart_conf, money.dumb_conf, false);
-      else for(const id of ['zone02-sm-val','zone02-dm-val']) {const e=document.getElementById(id);if(e)e.textContent='—';}
+      else for(const id of ['zone02-sm-val','zone02-dm-val']) {const e=document.getElementById(id);if(e)e.textContent='—';applyMetricAlert(e,'smart',null);}
       const source=document.getElementById('snapshot-money-source');
       if(source) source.textContent=money?.source || '這次掃描未有 Smart / Dumb Money 資料';
       for(const el of document.querySelectorAll('[data-money-source]')) el.textContent=money?.source || '這次掃描未有 Smart / Dumb Money 資料';

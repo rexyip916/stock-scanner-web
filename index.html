@@ -20,6 +20,17 @@
     @keyframes pulseGlow { 0%, 100% { opacity: 0.9; transform: scale(1); } 50% { opacity: 1; transform: scale(1.02); } }
     .animate-gacha { animation: pulseGlow 2.5s infinite ease-in-out; }
     .mono-num { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+    /* Local, three-second breathing background; never animate a whole card. */
+    .metric-alert { display:inline-block; border-radius:0.45rem; padding:0.12em 0.35em; color:#f8fafc; animation:metricBreath 3s ease-in-out infinite; }
+    .signal-tone-risk { --signal-rgb:244,63,94; }
+    .signal-tone-caution { --signal-rgb:245,158,11; }
+    .signal-tone-good { --signal-rgb:34,197,94; }
+    .signal-tone-signal { --signal-rgb:20,184,166; }
+    @keyframes metricBreath {
+      0%,100% { background-color:rgba(var(--signal-rgb),0.12); box-shadow:0 0 0 1px rgba(var(--signal-rgb),0.25); }
+      50% { background-color:rgba(var(--signal-rgb),0.38); box-shadow:0 0 12px rgba(var(--signal-rgb),0.32); }
+    }
   </style>
 <style>body[data-snapshot-loading] header,body[data-snapshot-loading] main{visibility:hidden}</style></head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-amber-500/30 selection:text-amber-200" data-snapshot-loading="1">
@@ -1068,6 +1079,6 @@
 </div>
 <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 hidden" id="drawer-backdrop" onclick="closeAllDrawers()"></div>
 <!-- JavaScript 核心 -->
-<script src="snapshot-adapter.js?v=volume-ma20-v1"></script>
+<script src="snapshot-adapter.js?v=metric-alerts-v1"></script>
 </body>
 </html>

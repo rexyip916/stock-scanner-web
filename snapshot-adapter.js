@@ -95,6 +95,7 @@
    for(const id of ['chart-factor-smi','chart-factor-cboe','chart-factor-vix','chart-factor-lev']){const e=document.getElementById(id);if(e)e.textContent='未有同次因子數據';}
    for(const card of document.querySelectorAll('[data-scan-gauge]')){
     const key=card.dataset.scanGauge;const value=sentiment[key];const num=card.querySelector('[data-gauge-value]');if(num)num.textContent=Number.isFinite(value)?value.toFixed(key==='vix'?2:0):'—';
+    if((key==='fear_greed'||key==='crypto') && window.applyMetricAlert) window.applyMetricAlert(num,'sentiment',value);
     const label=card.querySelector('[data-gauge-label]');if(label)label.textContent=key==='vix'?(Number.isFinite(value)?(value>=30?'極高波動':value>=25?'高波動':value>=20?'波動偏高':value>=15?'波動溫和':'低波動'):'未有資料'):(sentiment[key+'_label']||'未有資料');
     const needle=card.querySelector('[data-gauge-needle]');if(needle&&Number.isFinite(value)){const fraction=key==='vix'?(value-10)/30:value/100;needle.setAttribute('transform',`rotate(${Math.max(0,Math.min(1,fraction))*180-90},100,95)`);needle.removeAttribute('visibility');}
    }
@@ -102,6 +103,6 @@
    for(const id of ['calib-input-smart','calib-input-dumb']){const e=document.getElementById(id);if(e)e.value=d.money?(id.endsWith('smart')?d.money.smart_conf:d.money.dumb_conf):'';}
    status.textContent=`掃描時間：${snapshot.scan_time} ｜所有數據固定於這次掃描`;if(!snapshot.dashboard)status.textContent+=' ｜舊快照未包含 ZONE01–04 資料，請重新跑一次掃描。';
   }
-  const script=document.createElement('script');script.src='dashboard.js?v=volume-ma20-v1';script.onload=()=>{fillMarket();status.hidden=true;document.body.removeAttribute('data-snapshot-loading');};script.onerror=()=>{status.textContent='網站腳本未能載入，請重新整理。';};document.body.append(script);
+  const script=document.createElement('script');script.src='dashboard.js?v=metric-alerts-v1';script.onload=()=>{fillMarket();status.hidden=true;document.body.removeAttribute('data-snapshot-loading');};script.onerror=()=>{status.textContent='網站腳本未能載入，請重新整理。';};document.body.append(script);
  }catch(error){status.textContent=error.message;}
 })();
