@@ -10,6 +10,7 @@
 
     function applyMetricAlert(element, kind, value) {
       if (!element) return;
+      element = element.closest?.('[data-metric-card],[data-scan-gauge]') || element;
       element.classList.remove('metric-alert','signal-tone-risk','signal-tone-caution','signal-tone-good','signal-tone-signal');
       const state = metricAlertState(kind, value);
       if (state) {
@@ -423,9 +424,10 @@
       const confirmedVolumeSignal = (hero.category === 'early' && hero.volume_breakout && hero.pattern_state === 'BREAKOUT_UP') ||
         (retest?.status === 'CONFIRMED' && hero.volume_rebound && Number.isFinite(retest.confirmation_volume_ratio) && retest.confirmation_volume_ratio >= 1.2);
       const abnormalVolume = Number.isFinite(hero.vol_ratio) && hero.vol_ratio >= 3;
+      if (abnormalVolume || confirmedVolumeSignal) card.className += ' metric-alert signal-tone-' + (abnormalVolume ? 'caution' : 'signal');
       const posBadge=`<div class="px-2 py-1 rounded border text-[10px] font-bold font-mono ${badgeColor}" style="width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.6">
         <div>${firstLine}</div>
-        <div style="display:flex;flex-wrap:wrap;column-gap:0.75em"><span>${secondLine}</span>${volumeText ? `<span class="${confirmedVolumeSignal ? 'metric-alert signal-tone-signal' : ''}">${volumeText}</span>` : ''}</div>
+        <div style="display:flex;flex-wrap:wrap;column-gap:0.75em"><span>${secondLine}</span>${volumeText ? `<span>${volumeText}</span>` : ''}</div>
       </div>`;
 
       const ir = hero.index_resonance;
@@ -463,7 +465,7 @@
         <!-- 成交量倍數：所有卡片統一以 3X 為滿格 -->
         <div class="space-y-1.5 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
           <div class="flex justify-between items-center text-[11px] font-bold">
-            <span class="text-slate-300">⚡成交量 <strong class="text-white mono-num${abnormalVolume ? ' metric-alert signal-tone-caution' : ''}"${abnormalVolume ? ' title="異常巨量：達前20日平均3倍或以上"' : ''}>${Number.isFinite(hero.vol_ratio) ? hero.vol_ratio.toFixed(2) + 'X' : '—'}${abnormalVolume ? '｜異常巨量' : ''}</strong></span>
+            <span class="text-slate-300">⚡成交量 <strong class="text-white mono-num"${abnormalVolume ? ' title="異常巨量：達前20日平均3倍或以上"' : ''}>${Number.isFinite(hero.vol_ratio) ? hero.vol_ratio.toFixed(2) + 'X' : '—'}${abnormalVolume ? '｜異常巨量' : ''}</strong></span>
           </div>
           <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
             <div class="mana-bar-fill h-full rounded-full transition-all duration-500" style="width: ${volumeBarPct}%"></div>
