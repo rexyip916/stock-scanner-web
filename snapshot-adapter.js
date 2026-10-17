@@ -19,19 +19,27 @@
   }
   window.__SCAN_SNAPSHOT__=snapshot;window.__INITIAL_HEROES__=snapshot.heroes;window.__INITIAL_RETEST_WARNINGS__=snapshot.retest_warnings||[];
   const d=snapshot.dashboard||{};
+  function eventVolumeRatio(bars,date){
+   const index=bars?.findIndex(b=>b.date===date) ?? -1;
+   if(index<20)return null;
+   const previous=bars.slice(index-20,index).map(b=>b.volume),current=bars[index].volume;
+   const mean=previous.every(v=>Number.isFinite(v)&&v>=0)?previous.reduce((a,b)=>a+b,0)/20:0;
+   return Number.isFinite(current)&&current>0&&mean>0?current/mean:null;
+  }
   for(const hero of snapshot.heroes){
    const bars=snapshot.charts[hero.symbol]?.prices;
    const event=hero.breakout_tracking;
-   const signalDate=hero.category==='retest' ? event?.confirmed_date : event?.breakout_date;
+   const signalDate=hero.category==='retest' ? event?.confirmed_date : (hero.breakout_date||event?.breakout_date);
    if(signalDate && bars?.length)hero.signal_is_first_day=bars.at(-1).date===signalDate;
    if(hero.category==='retest' && event){
-    const index=bars?.findIndex(b=>b.date===event.confirmed_date) ?? -1;
-    const previous=index>=20 ? bars.slice(index-20,index).map(b=>b.volume) : [];
-    const current=index>=0 ? bars[index].volume : null;
-    const mean=previous.length===20 && previous.every(v=>Number.isFinite(v)&&v>=0) ? previous.reduce((a,b)=>a+b,0)/20 : 0;
-    event.confirmation_volume_ratio=Number.isFinite(current)&&current>0&&mean>0 ? current/mean : null;
+    event.confirmation_volume_ratio=eventVolumeRatio(bars,event.confirmed_date);
     event.volume_rebound=Number.isFinite(event.confirmation_volume_ratio)&&event.confirmation_volume_ratio>=1.2;
     hero.volume_rebound=event.status==='CONFIRMED'&&event.volume_rebound;
+   }
+   if(hero.category==='early'){
+    hero.breakout_day_volume_ratio=eventVolumeRatio(bars,signalDate);
+    if(event)event.breakout_volume_ratio=hero.breakout_day_volume_ratio;
+    hero.volume_breakout=hero.pattern_state==='BREAKOUT_UP'&&Number.isFinite(hero.breakout_day_volume_ratio)&&hero.breakout_day_volume_ratio>=1.2;
    }
    if(bars?.length>1)hero.change=(bars.at(-1).close/bars.at(-2).close-1)*100;
    // New scans carry server-calculated sector pairing and multi-day direction.
@@ -105,6 +113,6 @@
    for(const id of ['calib-input-smart','calib-input-dumb']){const e=document.getElementById(id);if(e)e.value=d.money?(id.endsWith('smart')?d.money.smart_conf:d.money.dumb_conf):'';}
    status.textContent=`掃描時間：${snapshot.scan_time} ｜所有數據固定於這次掃描`;if(!snapshot.dashboard)status.textContent+=' ｜舊快照未包含 ZONE01–04 資料，請重新跑一次掃描。';
   }
-  const script=document.createElement('script');script.src='dashboard.js?v=retest-rr15-v1';script.onload=()=>{fillMarket();status.hidden=true;document.body.removeAttribute('data-snapshot-loading');};script.onerror=()=>{status.textContent='網站腳本未能載入，請重新整理。';};document.body.append(script);
+  const script=document.createElement('script');script.src='dashboard.js?v=breakout-volume-v2';script.onload=()=>{fillMarket();status.hidden=true;document.body.removeAttribute('data-snapshot-loading');};script.onerror=()=>{status.textContent='網站腳本未能載入，請重新整理。';};document.body.append(script);
  }catch(error){status.textContent=error.message;}
 })();
